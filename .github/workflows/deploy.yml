@@ -6,7 +6,7 @@ env:
   # AWS 관련
   AWS_REGION: ap-northeast-2
   S3_BUCKET_NAME: mywikiclones3
-  CODE_DEPLOY_APPLICATION_NAME: mywikiclonedeploy
+  CODE_DEPLOY_APPLICATION_NAME: mywikicodedeploy
   CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: production
   # 코드 관련
   ENVIRONMENT_VARIABLE_FILE_PATH: ./src/main/resources/env.yml
