@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate Environment Variable File
         run: |
-          echo "DATABASE_URL: ${{ secrets.DATABASE_URL }}" >> ${{ env.ENVIRONMENT_VARIABLE_FILE_PATH }}
+          echo "DATABASE_URL: ${{ secrets.DATA_BASE_URL }}" >> ${{ env.ENVIRONMENT_VARIABLE_FILE_PATH }}
           echo "AWS_EC2_URL: ${{ secrets.AWS_EC2_URL }}" >> ${{ env.ENVIRONMENT_VARIABLE_FILE_PATH }}
 
       - name: Grant execute permission for gradlew 
@@ -38,7 +38,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Upload to AWS S3 # AWS S3 에 업로드
