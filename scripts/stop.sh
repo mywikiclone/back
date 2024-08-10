@@ -2,7 +2,7 @@
 
 # 프로젝트 경로
 PROJECT_ROOT="/home/ec2-user/back"
-JAR_FILE="$PROJECT_ROOT/ssagemeogja.jar"
+JAR_FILE="$PROJECT_ROOT/mywikicodedeploy.jar"
 
 # 각종 로그 경로
 DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
