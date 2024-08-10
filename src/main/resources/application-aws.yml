@@ -1,20 +1,46 @@
 spring:
+  config:
+    import: optional:classpath:env.yml
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  thymeleaf:
+    cache: false
+    check-template-location: true
+    prefix: classpath:/templates/
+    suffix: .html
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: ${DATA_BASE_URL}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
     username: postgres
     password: 1234
     driver-class-name: org.postgresql.Driver
 
-
   jpa:
-    show-sql: true
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        highlight_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: create
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  jwt:
+    secret: N1Y8VjG7aKNHXbPR1Pqa6FIBo9S5oy3zGEP6ErJ1P5Ua
+    expiration: 3000
   redis:
     lettuce:
     host: localhost
     port: 6379
-  jwt:
-    secret: N1Y8VjG7aKNHXbPR1Pqa6FIBo9S5oy3zGEP6ErJ1P5Ua
-    expiration: 3000
+
+
+
+cloud:
+  host:
+    url: ${AWS_EC2_URL}
+    port: 8080
+
+
+
+
+
