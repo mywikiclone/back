@@ -1,0 +1,60 @@
+name: Build and Deploy Spring Boot to AWS EC2
+
+on: workflow_dispatch
+# 환경변수 설정
+env:
+  # AWS 관련
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET_NAME: mywikiclones3
+  CODE_DEPLOY_APPLICATION_NAME: mywikicodedeploy
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: production
+  # 코드 관련
+  ENVIRONMENT_VARIABLE_FILE_PATH: ./src/main/resources/env.yml
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4 # 저장소로 부터 코드를 내려받는 액션
+      
+      - uses: actions/setup-java@v4 # java 세팅, temurin 의 17버전
+        with:
+          distribution: 'temurin' 
+          java-version: '21'
+
+      - name: Generate Environment Variable File
+        run: |
+          echo "DATABASE_URL: ${{ secrets.DATA_BASE_URL }}" >> ${{ env.ENVIRONMENT_VARIABLE_FILE_PATH }}
+          echo "AWS_EC2_URL: ${{ secrets.AWS_EC2_URL }}" >> ${{ env.ENVIRONMENT_VARIABLE_FILE_PATH }}
+
+      - name: Grant execute permission for gradlew 
+        run: chmod +x ./gradlew # gradlew 명령어 권한 부여
+        shell: bash
+
+      - name: Build with Gradle     # 내려 받은 코드 빌드
+        run: ./gradlew clean build -x test
+
+      - name: Configure AWS credentials # AWS 자격 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Upload to AWS S3 # AWS S3 에 업로드
+        run: | # 텍스트 블록의 시작
+          aws deploy push \
+            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+            --ignore-hidden-files \
+            --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
+            --source .
+        # AWS CodeDeploy 를 사용하여 파일을 업로드 == aws deploy push
+
+      - name: Deploy to AWS EC2 from S3 # S3에 올린 것을 EC2로 배포하는 작업
+        run: |
+          aws deploy create-deployment \
+            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+            --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
+        # CodeDeploy 가 appspec.yml 을 실행 == aws deploy create-deployment
