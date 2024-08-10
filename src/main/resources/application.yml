@@ -1,20 +1,4 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: 1234
-    driver-class-name: org.postgresql.Driver
-
-
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: create
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-  redis:
-    lettuce:
-    host: localhost
-    port: 6379
-  jwt:
-    secret: N1Y8VjG7aKNHXbPR1Pqa6FIBo9S5oy3zGEP6ErJ1P5Ua
-    expiration: 3000
+  profiles:
+    active:
+      - local
