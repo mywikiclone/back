@@ -55,7 +55,7 @@ public class MemberService {
         //초창기 로그인시 발행한 access토큰과 리프래시 토큰을 짝지어서 저장. ttl은 5분 설정
         ValueOperations<String,String> valueOperations =redisTemplate.opsForValue();
 
-        valueOperations.set(jwtoken.getAccesstoken(), jwtoken.getRefreshtoken(),3L,TimeUnit.SECONDS);
+        valueOperations.set(jwtoken.getAccesstoken(), jwtoken.getRefreshtoken(),300L,TimeUnit.SECONDS);
 
 
 
