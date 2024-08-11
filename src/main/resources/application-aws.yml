@@ -13,7 +13,7 @@ spring:
   datasource:
     url: ${DATA_BASE_URL}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
     username: postgres
-    password: 1234
+    password: dong3058!
     driver-class-name: org.postgresql.Driver
 
   jpa:
