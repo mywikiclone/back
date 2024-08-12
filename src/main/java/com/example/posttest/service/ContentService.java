@@ -1,5 +1,6 @@
 package com.example.posttest.service;
 
+import com.example.posttest.Exceptions.UnableToFindAccount;
 import com.example.posttest.dtos.ChangeLogDto;
 import com.example.posttest.dtos.ContentDto;
 import com.example.posttest.dtos.RealTimeIssueDto;
@@ -127,6 +128,10 @@ public class ContentService {
     public ApiResponse<List<ChangeLogDto>> getchangelog(int page_num, Long id){
          Pageable page=PageRequest.of(page_num,12);
          Page<ChangeLogDto> changeLogs=changeLongRepo.getchangelogs(id,page);
+         if(changeLogs.isEmpty()){
+
+             throw new UnableToFindAccount();
+         }
          /*List<ChangeLogDto> changeLogDtoList=changeLogs.stream()
                  .map(x->{
                    return  new ChangeLogDto(x.getLog_Id(),x.getCreate_Time());
