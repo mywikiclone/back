@@ -144,24 +144,24 @@ public class ContentControllers {
     랜덤 검색시 아무거나 주는 api
     */
 
-    @GetMapping("/random")
-    public ResponseEntity<ApiResponse<ContentDto>> random_pick(@CheckNewToken String newtoken){
-        return return_ans_method(contentService.FindContent(),newtoken);
-        //return ResponseEntity.ok(contentService.FindContent());
-    }
+   @GetMapping("/random")
+   public ResponseEntity<ApiResponse<ContentDto>> random_pick(@CheckNewToken String newtoken){
+       return return_ans_method(contentService.FindContent(),newtoken);
+       //return ResponseEntity.ok(contentService.FindContent());
+   }
 
 
 
 
-    public <T>ResponseEntity<ApiResponse<T>> return_ans_method(ApiResponse<T> apiResponse,String token){
-       if(token==null){
-            log.info("널값...?");
-            return ResponseEntity.ok(apiResponse);
-       }
-        log.info("헤더추가!!!");
-        HttpHeaders headers=new HttpHeaders();
-        headers.add("NewGenToken",token);
+   public <T>ResponseEntity<ApiResponse<T>> return_ans_method(ApiResponse<T> apiResponse,String token){
+      if(token==null){
+           log.info("널값...?");
+           return ResponseEntity.ok(apiResponse);
+      }
+       log.info("헤더추가!!!");
+      HttpHeaders headers=new HttpHeaders();
+       headers.add("NewGenToken",token);
 
-      return new ResponseEntity<>(apiResponse,headers,HttpStatus.OK);
-    }
+     return new ResponseEntity<>(apiResponse,headers,HttpStatus.OK);
+   }
 }
