@@ -45,8 +45,8 @@ public class ContentControllers {
     * 편집한 내용 기반으로 업데이트 및 changelog에다가 기록을 남기는애
     */
     @PostMapping("/update")
-    public void UpdateContent(@LoginUser Long member_id,@RequestBody ContentDto contentDto){
-        contentService.UpdateContent(member_id,contentDto);
+    public ResponseEntity<ApiResponse<String>> UpdateContent(@LoginUser Long member_id,@RequestBody ContentDto contentDto,@CheckNewToken String newtoken){
+        return return_ans_method(contentService.UpdateContent(member_id,contentDto),newtoken);
     }
 
 

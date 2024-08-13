@@ -55,7 +55,7 @@ public class ContentService {
 
 
     }
-    public void UpdateContent(Long member_id,ContentDto contentDto){
+    public ApiResponse<String> UpdateContent(Long member_id,ContentDto contentDto){
             Optional<Content> content_opt=contentRepository.findById(contentDto.getContent_id());
 
             LocalDateTime now=LocalDateTime.now();
@@ -66,6 +66,9 @@ public class ContentService {
             ChangeLog changeLog=new ChangeLog(content_opt.get(),contentDto.getContent(),member.get());
             changeLog.setCreate_Time(now);
             changeLongRepo.save(changeLog);
+
+
+            return ApiResponse.success("성공",ErrorMsgandCode.Successupdate.getMsg());
 
     }
 
@@ -128,6 +131,7 @@ public class ContentService {
     public ApiResponse<List<ChangeLogDto>> getchangelog(int page_num, Long id){
          Pageable page=PageRequest.of(page_num,12);
          Page<ChangeLogDto> changeLogs=changeLongRepo.getchangelogs(id,page);
+         log.info("최대 페이징갯수:{}",changeLogs.getTotalPages());
          if(changeLogs.isEmpty()){
 
              throw new UnableToFindAccount();
