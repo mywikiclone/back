@@ -43,7 +43,7 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addMapping("/**")
                 .allowedOriginPatterns("http://localhost:3000")
-                .allowedMethods("GET","POST")
+                .allowedMethods("GET","POST","OPTIONS")
                 .allowedHeaders("Authorization","Content-Type")//헤더도 이런설정이있따 ㅇㅇ;'
                 .allowCredentials(true);
     }
