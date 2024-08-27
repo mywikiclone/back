@@ -28,10 +28,16 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-        String access_token=request.getHeader("Authorization").substring(7);
-        log.info("=====인터셉터호출======");
+
+        log.info("===========인터셉터호출==============");
         log.info("controller:{}",handler.getClass());
         log.info("들어온 경로:{}",request.getRequestURI());
+
+
+
+
+        String access_token=request.getHeader("Authorization").substring(7);
+
 
         try{
             return jwtUtil.validatetoken(access_token);
