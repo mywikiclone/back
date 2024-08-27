@@ -32,6 +32,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         log.info("===========인터셉터호출==============");
         log.info("controller:{}",handler.getClass());
         log.info("들어온 경로:{}",request.getRequestURI());
+        log.info("request객체설명:{}",request.getHeader("Content-Type"));
 
 
 
