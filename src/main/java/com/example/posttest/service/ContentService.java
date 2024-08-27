@@ -144,12 +144,13 @@ public class ContentService {
          return ApiResponse.success(changeLogs.stream().toList(),ErrorMsgandCode.Successfind.getMsg());
     }
 
-    public ApiResponse<String> getchanagelogtext(Long id){
+    public ApiResponse<ContentDto> getchanagelogtext(Long id){
         Optional<ChangeLog> changeLog=changeLongRepo.findById(id);
         ChangeLog c=changeLog.get();
+        ContentDto contentDto=new ContentDto(c.getMember().getMember_id(),c.getContent().getTitle(),c.getChanged_Content());
 
 
-        return ApiResponse.success(c.getChanged_Content(),ErrorMsgandCode.Successfind.getMsg());
+        return ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg());
     }
 
 

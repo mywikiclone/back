@@ -96,7 +96,7 @@ public class ContentControllers {
     변동 기록 아이디로 변동 된text가져오는애
     */
     @GetMapping("/changelog/{id}")
-    public ResponseEntity<ApiResponse<String>> getchangelogcontext(@PathVariable("id") Long id, @CheckNewToken String newtoken){
+    public ResponseEntity<ApiResponse<ContentDto>> getchangelogcontext(@PathVariable("id") Long id, @CheckNewToken String newtoken){
 
 
         return return_ans_method(contentService.getchanagelogtext(id),newtoken);
