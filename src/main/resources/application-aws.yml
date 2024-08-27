@@ -27,7 +27,7 @@ spring:
       ddl-auto: create
   jwt:
     secret: N1Y8VjG7aKNHXbPR1Pqa6FIBo9S5oy3zGEP6ErJ1P5Ua
-    expiration: 60
+    expiration: 60000
   redis:
     lettuce:
     host: localhost

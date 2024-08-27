@@ -50,7 +50,7 @@ public class JwtUtil {
                 .builder()
                 .claim("user_id",id)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now+expiration+120))
+                .setExpiration(new Date(now+expiration+60000))
                 .signWith(SignatureAlgorithm.HS256,key)
                 .compact();
 
