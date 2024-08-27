@@ -42,7 +42,7 @@ public class JwtUtil {
         String accesstoken= Jwts.builder()
                 .claim("user_id",id)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now+expiration+60000))
+                .setExpiration(new Date(now+expiration+30))
                 .signWith(SignatureAlgorithm.HS256,key)
                 .compact();
 
@@ -50,7 +50,7 @@ public class JwtUtil {
                 .builder()
                 .claim("user_id",id)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now+expiration+60000))
+                .setExpiration(new Date(now+expiration+180))
                 .signWith(SignatureAlgorithm.HS256,key)
                 .compact();
 
