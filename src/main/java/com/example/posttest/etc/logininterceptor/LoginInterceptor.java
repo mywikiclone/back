@@ -11,10 +11,12 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.sql.Time;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -37,9 +39,16 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
 
+        if(isPreflightRequest(request)){
+
+            log.info("preflightrequest입니다!!!!!!!!!!!!!!");
+            return true;
+
+
+        }
+
+
         String access_token=request.getHeader("Authorization").substring(7);
-
-
         try{
             return jwtUtil.validatetoken(access_token);
         }
@@ -90,5 +99,26 @@ public class LoginInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         log.info("aftercompletion controller    :{}",handler.getClass());
         log.info("=====인터셉터종료======");
+    }
+
+
+    private boolean isPreflightRequest(HttpServletRequest request) {
+        return isOptions(request) && hasHeaders(request) && hasMethod(request) && hasOrigin(request);
+    }
+
+    private boolean isOptions(HttpServletRequest request) {
+        return request.getMethod().equalsIgnoreCase(HttpMethod.OPTIONS.toString());
+    }
+
+    private boolean hasHeaders(HttpServletRequest request) {
+        return (request.getHeader("Access-Control-Request-Headers"))!=null;
+    }
+
+    private boolean hasMethod(HttpServletRequest request) {
+        return (request.getHeader("Access-Control-Request-Method"))!=null;
+    }
+
+    private boolean hasOrigin(HttpServletRequest request) {
+        return (request.getHeader("Origin"))!=null;
     }
 }
