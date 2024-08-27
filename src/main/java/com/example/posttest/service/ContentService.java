@@ -63,6 +63,8 @@ public class ContentService {
 
 
             Optional<Member> member=memberRepository.findById(member_id);
+            log.info("content_dto,member_id:{} {}",contentDto,member_id);
+            log.info("object check:{} {}",content_opt.get(),member.get());
             ChangeLog changeLog=new ChangeLog(content_opt.get(),contentDto.getContent(),member.get());
             changeLog.setCreate_Time(now);
             changeLongRepo.save(changeLog);

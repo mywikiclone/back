@@ -32,11 +32,12 @@ public class LoginInterceptor implements HandlerInterceptor {
         log.info("=====인터셉터호출======");
         log.info("controller:{}",handler.getClass());
         log.info("들어온 경로:{}",request.getRequestURI());
+
         try{
             return jwtUtil.validatetoken(access_token);
         }
         catch(ExpiredJwtException e){
-
+            log.info("error token:{}",access_token);
             if(redisTemplate.opsForValue().get(access_token)==null){
 
                 throw new ReLoginError();
@@ -55,7 +56,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             JwtToken jwtToken=jwtUtil.genjwt(user_id);
 
             String refresh_token=(String) redisTemplate.opsForValue().get(access_token);
-
+            log.info("refresh_token:{}",refresh_token);
 
             redisTemplate.delete(access_token);
 
