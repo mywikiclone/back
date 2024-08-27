@@ -6,6 +6,7 @@ import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtToken;
 import com.example.posttest.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +45,11 @@ public class MemberControllers {
     //토큰 재생성을 위한 refresh토큰 이용,refresh토큰 재생성 이건 내일.
 
 
-
+    @GetMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> Logout(HttpServletRequest req){
+        String token=req.getHeader("Authorization").substring(7);
+        return memberService.logout(token);
+      }
 
 
 
