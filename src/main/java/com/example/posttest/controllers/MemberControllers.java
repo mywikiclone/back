@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,15 +37,20 @@ public class MemberControllers {
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO){
         String token=memberService.memberlogin(memberDTO);
         Cookie cookie=new Cookie("back_access_token",token);
-
         cookie.setPath("/");
         cookie.setMaxAge(60);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setDomain("localhost");
+        log.info("cookie값 확인:{}",cookie.toString());
+        String cookieHeader = String.format(
+                "back_access_token=%s; Path=/; Max-Age=60; HttpOnly; Secure=false; Domain=localhost",
+                token
+        );
+
         HttpHeaders headers=new HttpHeaders();
 
-        headers.add(HttpHeaders.SET_COOKIE,cookie.toString());
+        headers.add(HttpHeaders.SET_COOKIE,cookieHeader);
 
         return new ResponseEntity<>(ApiResponse.success(token, ErrorMsgandCode.Successfind.getMsg()),headers,HttpStatus.OK);
     };
