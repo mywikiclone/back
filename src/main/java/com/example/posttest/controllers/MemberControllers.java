@@ -44,7 +44,7 @@ public class MemberControllers {
         cookie.setDomain(null);
         log.info("cookie값 확인:{}",cookie.toString());
         String cookieHeader = String.format(
-                "back_access_token=%s; Path=/; Max-Age=120; HttpOnly; Secure=false; Domain=",
+                "back_access_token=%s; Path=/; Max-Age=120; HttpOnly; Secure=false; Domain=localhost",
                 token
         );
 
