@@ -39,8 +39,8 @@ public class MemberControllers {
         ResponseCookie responseCookie=ResponseCookie.from("back_access_token",token)
                 .maxAge(120)
                 .path("/")
-                .httpOnly(true)
-                .secure(false)
+                .httpOnly(true)      .
+                secure(false)
                 .sameSite("None")
                 .build();
 
@@ -68,8 +68,11 @@ public class MemberControllers {
         return memberService.logout(token);
       }
 
+    @GetMapping("/healthycheck")
+    public String healthycheck(){
 
-
+        return "ok";
+    }
 
 
 }
