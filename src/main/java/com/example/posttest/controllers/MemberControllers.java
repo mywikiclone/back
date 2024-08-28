@@ -42,19 +42,7 @@ public class MemberControllers {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("None")
-                .domain("localhost")
                 .build();
-        Cookie cookie=new Cookie("back_access_token",token);
-        cookie.setPath("/");
-        cookie.setMaxAge(60);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setDomain(null);
-        log.info("cookie값 확인:{}",responseCookie.toString());
-        String cookieHeader = String.format(
-                "back_access_token=%s; Path=/; Max-Age=120; HttpOnly; Secure=false; Domain=localhost",
-                token
-        );
 
         HttpHeaders headers=new HttpHeaders();
 
