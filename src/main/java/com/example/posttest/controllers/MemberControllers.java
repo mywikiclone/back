@@ -42,6 +42,7 @@ public class MemberControllers {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None")
+                .domain("localhost")
                 .build();
 
         HttpHeaders headers=new HttpHeaders();
