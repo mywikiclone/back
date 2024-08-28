@@ -39,8 +39,8 @@ public class MemberControllers {
         ResponseCookie responseCookie=ResponseCookie.from("back_access_token",token)
                 .maxAge(120)
                 .path("/")
-                .httpOnly(true)      .
-                secure(false)
+                .httpOnly(true)
+                .secure(true)
                 .sameSite("None")
                 .build();
 
