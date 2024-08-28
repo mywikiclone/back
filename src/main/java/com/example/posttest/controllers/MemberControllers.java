@@ -36,13 +36,21 @@ public class MemberControllers {
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO){
         String token=memberService.memberlogin(memberDTO);
+        ResponseCookie responseCookie=ResponseCookie.from("back_access_token",token)
+                .maxAge(120)
+                .path("/")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("None")
+                .domain("localhost")
+                .build();
         Cookie cookie=new Cookie("back_access_token",token);
         cookie.setPath("/");
         cookie.setMaxAge(60);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setDomain(null);
-        log.info("cookie값 확인:{}",cookie.toString());
+        log.info("cookie값 확인:{}",responseCookie.toString());
         String cookieHeader = String.format(
                 "back_access_token=%s; Path=/; Max-Age=120; HttpOnly; Secure=false; Domain=localhost",
                 token
@@ -50,7 +58,7 @@ public class MemberControllers {
 
         HttpHeaders headers=new HttpHeaders();
 
-        headers.add(HttpHeaders.SET_COOKIE,cookieHeader);
+        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
 
         return new ResponseEntity<>(ApiResponse.success(token, ErrorMsgandCode.Successfind.getMsg()),headers,HttpStatus.OK);
     };
