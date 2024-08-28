@@ -37,12 +37,11 @@ public class MemberControllers {
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO){
         String token=memberService.memberlogin(memberDTO);
         ResponseCookie responseCookie=ResponseCookie.from("back_access_token",token)
-                .maxAge(120)
+                .maxAge(30)
                 .path("/")
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None")
-                .domain("localhost")
                 .build();
 
         HttpHeaders headers=new HttpHeaders();
