@@ -47,7 +47,7 @@ public class MemberService {
 
     }
 
-    public ApiResponse<String> memberlogin(MemberDto memberDto) {
+    public String memberlogin(MemberDto memberDto) {
 
         Optional<Member> member = memberRepository.findmember(memberDto.getEmail(), memberDto.getPassword());
         if (member.isEmpty()) {
@@ -61,8 +61,8 @@ public class MemberService {
         valueOperations.set(jwtoken.getAccesstoken(), jwtoken.getRefreshtoken(),180,TimeUnit.SECONDS);
 
 
-
-        return ApiResponse.success(jwtoken.getAccesstoken(), ErrorMsgandCode.Successfind.getMsg());
+        return jwtoken.getAccesstoken();
+        //return ApiResponse.success(jwtoken.getAccesstoken(), ErrorMsgandCode.Successfind.getMsg());
 
     }
 

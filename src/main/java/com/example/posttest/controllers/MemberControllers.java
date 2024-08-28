@@ -6,9 +6,12 @@ import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtToken;
 import com.example.posttest.service.MemberService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +34,19 @@ public class MemberControllers {
 
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO){
-      return ResponseEntity.ok( memberService.memberlogin(memberDTO));
+        String token=memberService.memberlogin(memberDTO);
+        Cookie cookie=new Cookie("back_access_token",token);
+
+        cookie.setPath("/");
+        cookie.setMaxAge(60);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setDomain("localhost");
+        HttpHeaders headers=new HttpHeaders();
+
+        headers.add(HttpHeaders.SET_COOKIE,cookie.toString());
+
+        return new ResponseEntity<>(ApiResponse.success(token, ErrorMsgandCode.Successfind.getMsg()),headers,HttpStatus.OK);
     };
 
     @GetMapping("/tokenlogin")
