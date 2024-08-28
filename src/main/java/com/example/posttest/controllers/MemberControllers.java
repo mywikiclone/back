@@ -41,10 +41,10 @@ public class MemberControllers {
         cookie.setMaxAge(60);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setDomain("localhost");
+        cookie.setDomain(null);
         log.info("cookie값 확인:{}",cookie.toString());
         String cookieHeader = String.format(
-                "back_access_token=%s; Path=/; Max-Age=60; HttpOnly; Secure=false; Domain=localhost",
+                "back_access_token=%s; Path=/; Max-Age=120; HttpOnly; Secure=false; Domain=",
                 token
         );
 
