@@ -42,7 +42,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
 
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOriginPatterns("http://localhost:3000")
                 .allowedMethods("*")
                 .allowedHeaders("*")//헤더도 이런설정이있따 ㅇㅇ;'
                 .allowCredentials(true);
