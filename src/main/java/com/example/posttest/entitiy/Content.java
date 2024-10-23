@@ -18,9 +18,14 @@ public class Content extends Times {
     private Long content_id;
 
 
+    @ManyToOne
+    @JoinColumn(name="member_id")
+    private Member member;
+
+
     private String title;
 
-
+    @Lob
     private String content;
 
 
@@ -28,6 +33,14 @@ public class Content extends Times {
         this.title = title;
         this.content = content;
     }
+
+
+    public Content(Member member, String title, String content) {
+        this.member = member;
+        this.title = title;
+        this.content = content;
+    }
+
     public static Comparator<Content> byUpdateTime() {
         return Comparator.comparing(Content::getUpdate_Time);
     }

@@ -18,11 +18,6 @@ public class ContentRepoImpl implements ContentRepo {
 
 
 
-
-
-
-
-
     public Optional<Content> findbytitle(String titles){
         String query="select c from Content c where c.title=:titles";
 

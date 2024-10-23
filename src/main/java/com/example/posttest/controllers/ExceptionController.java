@@ -27,7 +27,7 @@ public class ExceptionController {
 
     private final JwtUtil jwtUtil;
 
-    @ExceptionHandler({MalformedJwtException.class,UnsupportedJwtException.class,IllegalArgumentException.class})
+    @ExceptionHandler({MalformedJwtException.class,UnsupportedJwtException.class})
     public ResponseEntity<ApiResponse<String>> jwterrors(Exception ex){
         log.info("에러종류:{}",ex.getClass());
 

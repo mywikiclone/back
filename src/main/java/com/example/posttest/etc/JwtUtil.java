@@ -38,7 +38,7 @@ public class JwtUtil {
 
         Long now=System.currentTimeMillis();
 
-
+        log.info("exp:{}",expiration);
         String accesstoken= Jwts.builder()
                 .claim("user_id",id)
                 .setIssuedAt(new Date(now))
@@ -48,9 +48,8 @@ public class JwtUtil {
 
         String refreshtoken=Jwts
                 .builder()
-                .claim("user_id",id)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now+expiration+60000))
+                .setExpiration(new Date(now+expiration))
                 .signWith(SignatureAlgorithm.HS256,key)
                 .compact();
 

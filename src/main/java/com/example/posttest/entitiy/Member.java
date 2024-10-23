@@ -16,6 +16,8 @@ public class Member {
     private Long member_id;
 
 
+    @Column
+    private String salt;
 
     @Column
     private String email;
@@ -24,6 +26,13 @@ public class Member {
     private String password;
 
     public Member(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    public Member(String salt, String email, String password) {
+
+        this.salt = salt;
         this.email = email;
         this.password = password;
     }

@@ -1,22 +1,25 @@
-package com.example.posttest.etc.logininterceptor;
+package com.example.posttest.etc.logininterceptors;
 
 import com.example.posttest.Exceptions.ReLoginError;
 import com.example.posttest.etc.JwtToken;
 import com.example.posttest.etc.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NoArgsConstructor;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.sql.Time;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -27,6 +30,10 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String,String> redisTemplate;
+    @Value("${spring.jwt.expiration}")
+    private  Long expiration;
+
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
@@ -48,46 +55,38 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
 
 
-        String access_token=request.getHeader("Authorization").substring(7);
-        try{
-            return jwtUtil.validatetoken(access_token);
+        HttpSession httpSession= request.getSession(false);
+
+
+        if(httpSession==null){
+
+            throw new ReLoginError();
+
         }
-        catch(ExpiredJwtException e){
-            log.info("error token:{}",access_token);
-            if(redisTemplate.opsForValue().get(access_token)==null){
-
-                throw new ReLoginError();
-            }
 
 
+        //String access_getHtoken=request.eader("Authorization").substring(7);
+        /*Optional<String> access_token=get_token_from_req(request);
+        Long member_id=check_refresh_token_valid(request);
 
-            Long ttl_left=redisTemplate.getExpire(access_token);
+        if(access_token.isEmpty()){
 
-
-
-
-
-            Long user_id=jwtUtil.getidfromtoken_decode_payload(access_token);
-
-            JwtToken jwtToken=jwtUtil.genjwt(user_id);
-
-            String refresh_token=(String) redisTemplate.opsForValue().get(access_token);
-            log.info("refresh_token:{}",refresh_token);
-
-            redisTemplate.delete(access_token);
-
-            redisTemplate.opsForValue().set(jwtToken.getAccesstoken(),refresh_token,ttl_left,TimeUnit.SECONDS);
-
+            JwtToken jwtToken=jwtUtil.genjwt(member_id);
 
             request.setAttribute("ReGenToken",jwtToken.getAccesstoken());
 
+
             return true;
+
         }
 
 
+        return true;*/
 
 
-        //return HandlerInterceptor.super.preHandle(request, response, handler);
+
+        return true;
+
     }
 
     @Override
@@ -121,4 +120,59 @@ public class LoginInterceptor implements HandlerInterceptor {
     private boolean hasOrigin(HttpServletRequest request) {
         return (request.getHeader("Origin"))!=null;
     }
+
+
+    private Optional<String> get_token_from_req(HttpServletRequest req){
+
+        Cookie[] cookies=req.getCookies();
+        if(cookies!=null){
+
+
+
+
+        Optional<Cookie> cookie= Arrays.stream(cookies).filter(x->"back_access_token".equals(x.getName()))
+                .findFirst();
+        if(cookie.isEmpty()){
+            return Optional.empty();
+        }
+
+
+        Optional<String> access_token=Optional.ofNullable(cookie.get().getValue());
+
+
+        return access_token;}
+        return Optional.empty();
+    }
+
+    private Long check_refresh_token_valid(HttpServletRequest req){
+        Cookie[] cookies=req.getCookies();
+        if(cookies!=null){
+        Optional<Cookie> cookie= Arrays.stream(cookies).filter(x->"back_refresh_token".equals(x.getName()))
+                .findFirst();
+
+        Optional<String> number=Optional.ofNullable((String)redisTemplate.opsForValue().get(cookie.get().getValue()));
+        if(cookie.isPresent()&&number.isPresent()) {
+
+
+
+                return Long.parseLong(number.get());
+
+
+
+
+        }
+        else {
+            throw new ReLoginError();
+        }
+        }
+        else {
+            throw new ReLoginError();
+        }
+    }
 }
+
+
+
+
+
+

@@ -12,8 +12,8 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
 
 
-    @Query("select m from Member m where m.email=:email and m.password=:password")
-    public Optional<Member> findmember(@Param("email") String email, @Param("password")String password);
+    @Query("select m from Member m where m.email=:email")
+    public Optional<Member> findmember(@Param("email") String email);
 
 
     @Query("select m from Member m where m.email=:email")

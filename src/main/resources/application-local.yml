@@ -1,4 +1,6 @@
 spring:
+
+
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
@@ -7,9 +9,14 @@ spring:
 
 
   jpa:
-    show-sql: true
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        highlight_sql: true
     hibernate:
       ddl-auto: create
+
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   redis:
     lettuce:
@@ -17,4 +24,41 @@ spring:
     port: 6379
   jwt:
     secret: N1Y8VjG7aKNHXbPR1Pqa6FIBo9S5oy3zGEP6ErJ1P5Ua
-    expiration: 60000
+    expiration: 1800000
+
+  # Email
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hwangdonggeun70@gmail.com
+    password: yugs zzox xpne inid
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    auth-code-expiration-millis: 120  # 30 * 60 * 1000 == 30?
+server:
+  http2:
+    enabled: true
+  ssl:
+
+    key-store-type: PKCS12
+    key-store: src/main/resources/keystore.p12
+    key-store-password: 1234!@
+    key-alias: linemac-ssl
+
+  servlet:
+    session:
+       timeout: 1800
+       cookie:
+        http-only: true
+        path: /
+        secure: true
+        domain: localhost
+        same-site: none

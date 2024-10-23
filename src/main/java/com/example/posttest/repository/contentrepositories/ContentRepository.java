@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ContentRepository extends JpaRepository<Content,Long>, ContentRepo {
 
@@ -27,6 +28,6 @@ public interface ContentRepository extends JpaRepository<Content,Long>, ContentR
 
 
  @Query(value = "select * from Content c order by random() limit 1",nativeQuery = true)
- public Content random_logic();
+ public Optional<Content> random_logic();
 
 }

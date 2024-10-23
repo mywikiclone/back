@@ -19,7 +19,6 @@ public class RealTimeIssue {
 
     @ManyToOne
     @JoinColumn(name="content_id")
-
     private Content content;
 
 

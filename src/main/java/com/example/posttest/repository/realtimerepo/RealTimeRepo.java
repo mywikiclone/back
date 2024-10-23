@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface RealTimeRepo extends JpaRepository<RealTimeIssue,Long> {
 
@@ -20,4 +21,9 @@ public interface RealTimeRepo extends JpaRepository<RealTimeIssue,Long> {
             "where i.searched_time>:now " +
             "group by i.content.content_id,i.content.title order by count(i) desc")
     public Page<RealTimeIssueListDto> getrealtime(Pageable pageable, @Param("now") LocalDateTime now);
+
+
+    @Query("select i from RealTimeIssue i join fetch i.content where i.issue_id=1")
+    public Optional<RealTimeIssue> getreal();
 }
+

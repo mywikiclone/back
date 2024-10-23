@@ -1,10 +1,7 @@
 package com.example.posttest.service;
 
 import com.example.posttest.Exceptions.UnableToFindAccount;
-import com.example.posttest.dtos.ChangeLogDto;
-import com.example.posttest.dtos.ContentDto;
-import com.example.posttest.dtos.RealTimeIssueDto;
-import com.example.posttest.dtos.RealTimeIssueListDto;
+import com.example.posttest.dtos.*;
 import com.example.posttest.entitiy.ChangeLog;
 import com.example.posttest.entitiy.Content;
 import com.example.posttest.entitiy.Member;
@@ -22,6 +19,7 @@ import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,34 +41,44 @@ public class ContentService {
     private final MemberRepository memberRepository;
 
 
-    public void ContentSave(ContentDto contentDto){
+    public ResponseEntity<ApiResponse<ContentDto>> ContentSave(ContentDto contentDto, Long member_id){
 
 
-            Content content=new Content(contentDto.getTitle(),contentDto.getContent());
+            Optional<Member> member=memberRepository.findById(member_id);
+
+            Content content=new Content(member.get(),contentDto.getTitle(),contentDto.getContent());
 
             content.setCreate_Time(LocalDateTime.now());
             content.setUpdate_Time(LocalDateTime.now());
 
-            contentRepository.save(content);
+            Content content1=contentRepository.save(content);
+            log.info("content1:{} {} {} {} {}",content1.getTitle(),content1.getContent_id(),content1.getUpdate_Time(),content.getContent(),content1.getMember().getEmail());
+
+            return ResponseEntity.ok(ApiResponse.success(new ContentDto(content1.getContent_id(),content1.getTitle(),content1.getContent(),content1.getMember().getEmail(),content1.getUpdate_Time()),ErrorMsgandCode.Successfind.getMsg()));
+        }
 
 
-    }
-    public ApiResponse<String> UpdateContent(Long member_id,ContentDto contentDto){
+    public ResponseEntity<ApiResponse<String>> UpdateContent(Long member_id,ContentDto contentDto){
             Optional<Content> content_opt=contentRepository.findById(contentDto.getContent_id());
 
+
+
+
             LocalDateTime now=LocalDateTime.now();
-            int x=contentRepository.updatecontent(contentDto.getTitle(), contentDto.getContent(),now,contentDto.getContent_id());
+            if(content_opt.isPresent()){
+                int x=contentRepository.updatecontent(contentDto.getTitle(), contentDto.getContent(),now,contentDto.getContent_id());
+                Optional<Member> member=memberRepository.findById(member_id);
+                log.info("content_dto,member_id:{} {}",contentDto,member_id);
+                log.info("object check:{} {}",content_opt.get(),member.get());
+                ChangeLog changeLog=new ChangeLog(content_opt.get(),contentDto.getContent(),member.get());
+                changeLog.setCreate_Time(now);
+                changeLongRepo.save(changeLog);
 
 
-            Optional<Member> member=memberRepository.findById(member_id);
-            log.info("content_dto,member_id:{} {}",contentDto,member_id);
-            log.info("object check:{} {}",content_opt.get(),member.get());
-            ChangeLog changeLog=new ChangeLog(content_opt.get(),contentDto.getContent(),member.get());
-            changeLog.setCreate_Time(now);
-            changeLongRepo.save(changeLog);
+            return ResponseEntity.ok(ApiResponse.success(now.toString(),ErrorMsgandCode.Successupdate.getMsg()));
+            }
 
-
-            return ApiResponse.success("성공",ErrorMsgandCode.Successupdate.getMsg());
+            return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
 
     }
 
@@ -93,25 +101,31 @@ public class ContentService {
 
 
 
-    public ApiResponse<ContentDto> FindContent(Long id){
+    public ResponseEntity<ApiResponse<ContentDto>> FindContent(Long id){
         Optional<Content> content=contentRepository.findById(id);
 
         if(content.isEmpty()){
 
 
-            return ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg());
+            return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
         }
         saveRealTime(content.get());
-        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent());
-        return ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg());
+        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time());
+        return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));
     }
 
 
-    public ApiResponse<ContentDto> FindContent(){
-        Content content=contentRepository.random_logic();
-        saveRealTime(content);
-        return ApiResponse.success(new ContentDto(content.getContent_id(), content.getTitle(), content.getContent()),ErrorMsgandCode.Successfind.getMsg());
-    }
+    public ResponseEntity<ApiResponse<ContentDto>> FindContent(){
+        Optional<Content> content=contentRepository.random_logic();
+
+        if(content.isPresent()) {
+            saveRealTime(content.get());
+            return ResponseEntity.ok(ApiResponse.success(new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time()), ErrorMsgandCode.Successfind.getMsg()));
+        }
+
+
+        return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+        }
 
     public ApiResponse<ContentDto> FindContent(String title){
         Optional<Content> content=contentRepository.findbytitle(title);
@@ -122,7 +136,7 @@ public class ContentService {
             return ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg());
         }
         saveRealTime(content.get());
-        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent());
+        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time());
         return ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg());
     }
 
@@ -130,41 +144,60 @@ public class ContentService {
 
 
 
-    public ApiResponse<List<ChangeLogDto>> getchangelog(int page_num, Long id){
+    public ResponseEntity<ApiResponse<List<ChangeLogDto>>> getchangelog(int page_num, Long id){
          Pageable page=PageRequest.of(page_num,12);
          Page<ChangeLogDto> changeLogs=changeLongRepo.getchangelogs(id,page);
          log.info("최대 페이징갯수:{}",changeLogs.getTotalPages());
          if(changeLogs.isEmpty()){
 
-             throw new UnableToFindAccount();
+             return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
          }
          /*List<ChangeLogDto> changeLogDtoList=changeLogs.stream()
                  .map(x->{
                    return  new ChangeLogDto(x.getLog_Id(),x.getCreate_Time());
                  })
                  .collect(Collectors.toList());*/
-         return ApiResponse.success(changeLogs.stream().toList(),ErrorMsgandCode.Successfind.getMsg());
+         return ResponseEntity.ok(ApiResponse.success(changeLogs.stream().toList(),ErrorMsgandCode.Successfind.getMsg()));
     }
 
-    public ApiResponse<ContentDto> getchanagelogtext(Long id){
+    public ResponseEntity<ApiResponse<ContentDto>> getchanagelogtext(Long id){
         Optional<ChangeLog> changeLog=changeLongRepo.findById(id);
+
+
+
+        if(changeLog.isPresent()){
         ChangeLog c=changeLog.get();
-        ContentDto contentDto=new ContentDto(c.getMember().getMember_id(),c.getContent().getTitle(),c.getChanged_Content());
+        ContentDto contentDto=new ContentDto(c.getMember().getMember_id(),c.getContent().getTitle(),c.getChanged_Content(),c.getUpdate_Time());
 
 
-        return ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg());
+        return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));}
+        return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
     }
 
 
-    public ApiResponse<List<RealTimeIssueDto>> getRealtimeissue(){
+
+    public void testing(){
+
+    Optional<RealTimeIssue> rel=realTimeRepo.getreal();
+    log.info("rel:{}",rel);
+    }
+
+
+
+    public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getRealtimeissue(){
 
         Pageable pageable=PageRequest.of(0,10);
         LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
 
 
-
+        log.info("작동은하는가");
         Page<RealTimeIssueListDto> realTimeIssues=realTimeRepo.getrealtime(pageable,now);
+        if(realTimeIssues.isEmpty()){
 
+
+            return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
+        }
         List<RealTimeIssueDto> realTimeIssueDtoList=realTimeIssues.stream()
                 .map(x->{
 
@@ -175,16 +208,18 @@ public class ContentService {
                 .collect(Collectors.toList());
 
 
-        return ApiResponse.success(realTimeIssueDtoList,ErrorMsgandCode.Successfind.getMsg());
+        return ResponseEntity.ok(ApiResponse.success(realTimeIssueDtoList,ErrorMsgandCode.Successfind.getMsg()));
     }
 
-    public ApiResponse<List<RealTimeIssueDto>> getlastchagelogs(){
+    public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getlastchagelogs(){
         LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
 
        List<Content> contentlist=changeLongRepo.getatleastchages(now);
        log.info("{}",contentlist.size());
 
        List<RealTimeIssueDto> contentlist2=contentlist.stream()
+
+
                .sorted(Content.byUpdateTime())
                .limit(10)
                .map(x->{
@@ -194,15 +229,19 @@ public class ContentService {
                .collect(Collectors.toList());
 
 
-        return ApiResponse.success(contentlist2,ErrorMsgandCode.Successfind.getMsg());
+        return ResponseEntity.ok(ApiResponse.success(contentlist2,ErrorMsgandCode.Successfind.getMsg()));
 
     }
 
 
-    public ApiResponse<List<RealTimeIssueDto>> search_logic(String title){
+    public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> search_logic(String title){
             Pageable pageable=PageRequest.of(0,10);
             Page<Content> contents=contentRepository.search_logic(title,pageable);
+            if(contents.isEmpty()){
 
+
+                return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+            }
             List<RealTimeIssueDto> realTimeIssueDtoList=contents.stream()
                     .map(x->{
 
@@ -210,7 +249,7 @@ public class ContentService {
                     })
                     .collect(Collectors.toList());
 
-            return ApiResponse.success(realTimeIssueDtoList,ErrorMsgandCode.Successfind.getMsg());
+            return ResponseEntity.ok(ApiResponse.success(realTimeIssueDtoList,ErrorMsgandCode.Successfind.getMsg()));
 
     }
 }
