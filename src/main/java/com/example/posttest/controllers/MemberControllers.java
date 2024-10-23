@@ -156,9 +156,9 @@ public class MemberControllers {
       }
 
     @GetMapping("/healthycheck")
-    public String healthycheck(){
+    public ResponseEntity<String> healthycheck(){
 
-        return "ok";
+        return  ResponseEntity.ok("success");
     }
 
 
