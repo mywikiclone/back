@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.Response;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class MemberService {
 
 
@@ -126,13 +128,13 @@ public class MemberService {
     public ApiResponse<String> memberlogin(MemberDto memberDto, HttpServletRequest req) {
 
         Optional<Member> member = memberRepository.findmember(memberDto.getEmail());
+        log.info("email:{} {}",memberDto.getEmail(),memberDto.getPassword());
+
         if (member.isEmpty()) {
             throw new UnableToFindAccount();
         }
 
-        String Hashed=BCrypt.hashpw(member.get().getPassword(),member.get().getSalt());
-
-        if(BCrypt.checkpw(memberDto.getPassword(),Hashed)){
+        if(BCrypt.checkpw(memberDto.getPassword(),member.get().getPassword())){
 
 
 
