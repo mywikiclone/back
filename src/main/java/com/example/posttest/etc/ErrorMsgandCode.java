@@ -15,7 +15,19 @@ public enum ErrorMsgandCode {
     FailJwt("적절치 않은 토큰입니다."),
     FailIdExist("이미존재하는 회원입니다"),
     FailNoExistMember("찾을수없는 회원입니다"),
-    Fail_Need_ReLogin("로그인이 필요합니다");
+    Fail_Need_ReLogin("로그인이 필요합니다"),
+    Fail_Csrf_Auth("csrf 실패 재로그인 해주세요"),
+
+    Fail_Find("요청하신 자료가 없습니다"),
+
+    Fail_Etc_Error("오류가 발생했습니다 다시시도해주세요"),
+
+
+    Fail_Find_Data("해당되는 데이터가없습니다"),
+
+    Fail_No_Power("권한 부족!");
+
+
 
 
 

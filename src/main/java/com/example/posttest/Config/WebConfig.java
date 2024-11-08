@@ -28,7 +28,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor(jwtUtil,redisTemplate))
                 .order(1)
-                .addPathPatterns("/update","/save");
+                .addPathPatterns("/update","/save","/admin/**","/topicsave","/savecomment","/changepassword");
+
 
 
 
@@ -57,6 +58,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns("http://localhost:3000","http://ec2-3-36-94-21.ap-northeast-2.compute.amazonaws.com")
                 .allowedMethods("*")
                 .allowedHeaders("*")//헤더도 이런설정이있따 ㅇㅇ;'
+                .exposedHeaders("Csrf_Check","Csrf_check")//z클라이언트가 응답을볼떄 볼수잇는 헤더지정
                 .allowCredentials(true);
     }
 

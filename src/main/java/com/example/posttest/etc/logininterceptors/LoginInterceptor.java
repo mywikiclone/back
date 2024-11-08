@@ -1,5 +1,6 @@
 package com.example.posttest.etc.logininterceptors;
 
+import com.example.posttest.Exceptions.CsrfError;
 import com.example.posttest.Exceptions.ReLoginError;
 import com.example.posttest.etc.JwtToken;
 import com.example.posttest.etc.JwtUtil;
@@ -64,28 +65,20 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         }
 
+        String token=request.getHeader("Csrf_Check");
+        String csrf=(String) httpSession.getAttribute("csrf");
 
-        //String access_getHtoken=request.eader("Authorization").substring(7);
-        /*Optional<String> access_token=get_token_from_req(request);
-        Long member_id=check_refresh_token_valid(request);
-
-        if(access_token.isEmpty()){
-
-            JwtToken jwtToken=jwtUtil.genjwt(member_id);
-
-            request.setAttribute("ReGenToken",jwtToken.getAccesstoken());
+        if(csrf.equals(token)){
 
 
             return true;
-
         }
 
+        else{
 
-        return true;*/
+            throw new CsrfError();
+        }
 
-
-
-        return true;
 
     }
 

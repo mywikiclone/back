@@ -1,8 +1,7 @@
 package com.example.posttest.service;
 
 
-import com.example.posttest.Exceptions.ExistIdError;
-import com.example.posttest.Exceptions.UnableToFindAccount;
+import com.example.posttest.Exceptions.*;
 import com.example.posttest.dtos.MemberDto;
 import com.example.posttest.entitiy.Member;
 import com.example.posttest.etc.*;
@@ -24,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,20 +48,36 @@ public class MemberService {
 
 
     public ResponseEntity<ApiResponse<String>> memberassign(MemberDto memberDto){
-        String salt=BCrypt.gensalt();
+        try{
+
+         String salt=BCrypt.gensalt(10);
         String password=BCrypt.hashpw(memberDto.getPassword(),salt);
-        Member member=new Member(salt,memberDto.getEmail(),password);
-        Optional<Member> memberopt= memberRepository.findmember_beforeassign(memberDto.getEmail());
+            Member member=new Member();
+
+        if(memberDto.getEmail().equals("dong.3058@daum.net")) {
+
+            member = new Member(memberDto.getEmail(),password,UserAdmin.Admin);
+        }else{
+            member=new Member(memberDto.getEmail(),password,UserAdmin.User);}
+
+        member.setCreate_Time(LocalDateTime.now());
+        /*Optional<Member> memberopt= memberRepository.findmember_beforeassign(memberDto.getEmail());
         if(memberopt.isPresent()){
             throw new ExistIdError();
 
-        }
+        }*/
 
         memberRepository.save(member);
 
 
 
         return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
+        }
+        catch(Exception e){
+
+
+            throw new EtcError();
+        }
 
     }
 
@@ -92,8 +108,8 @@ public class MemberService {
 
         if(session==null){
 
-            return ResponseEntity.ok(ApiResponse.fail("실패"));
-
+            //return ResponseEntity.ok(ApiResponse.fail("실패"));
+            throw new CantFindError();
         }
 
         Long member_id=(Long) session.getAttribute(LoginSessionConst.session_const);
@@ -125,9 +141,29 @@ public class MemberService {
 
 
 
-    public ApiResponse<String> memberlogin(MemberDto memberDto, HttpServletRequest req) {
 
-        Optional<Member> member = memberRepository.findmember(memberDto.getEmail());
+    public ResponseEntity<ApiResponse<String>> changepassword(MemberDto memberDto){
+
+        try {
+            String salt = BCrypt.gensalt();
+            String password = BCrypt.hashpw(memberDto.getPassword(), salt);
+            int nums = memberRepository.changepassword(memberDto.getEmail(), password);
+
+            return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successfind.getMsg()));
+
+        }
+        catch(Exception e) {
+            throw new EtcError();
+        }
+        //return ResponseEntity.ok(ApiResponse.success("업뎃실패",ErrorMsgandCode.Fail_Csrf_Auth.getMsg()));
+
+
+    }
+
+
+    public String memberlogin(MemberDto memberDto, HttpServletRequest req) {
+
+        Optional<Member> member = memberRepository.findmember_beforeassign(memberDto.getEmail());
         log.info("email:{} {}",memberDto.getEmail(),memberDto.getPassword());
 
         if (member.isEmpty()) {
@@ -141,16 +177,18 @@ public class MemberService {
         HttpSession session=req.getSession();
 
         session.setAttribute(LoginSessionConst.session_const,member.get().getMember_id());
+        String csrf=jwtUtil.genjwt();
+        session.setAttribute("csrf",csrf);
 
+        return csrf;
 
+            //return ResponseEntity.ok(ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg()));
 
-        //return ResponseEntity.ok(ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg()));
-
-        return ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg());}
-
+        }
 
 
         throw new UnableToFindAccount();
+
         /*JwtToken jwtoken = jwtUtil.genjwt(member.get().getMember_id());
         //초창기 로그인시 발행한 access토큰과 리프래시 토큰을 짝지어서 저장. ttl은 5분 설정
         ValueOperations<String,String> valueOperations =redisTemplate.opsForValue();

@@ -1,6 +1,9 @@
 package com.example.posttest.service;
 
 
+import com.example.posttest.Exceptions.CantFindDataError;
+import com.example.posttest.Exceptions.CantFindError;
+import com.example.posttest.Exceptions.EtcError;
 import com.example.posttest.dtos.DiscussionCommentDtos;
 import com.example.posttest.dtos.DiscussionTopicDto;
 import com.example.posttest.dtos.TopicDto;
@@ -42,8 +45,7 @@ public class DiscussionService {
 
     public ResponseEntity<ApiResponse<DiscussionTopicDto>> savetopic(TopicDto topicDto,Long member_id){
 
-
-
+        try{
         LocalDateTime now=getlocldatetime();
         LocalDateTime deadline=now.plusMinutes(topicDto.getDeadline());
         Optional<Member> member=memberRepository.findById(member_id);
@@ -53,19 +55,33 @@ public class DiscussionService {
         DiscussionTopicDto discussionTopicDto=new DiscussionTopicDto(member.get().getEmail(),topicDto.getTopic_title(),topicDto.getSubject_title(),deadline,topicDto.getIntroduction_text(),discussionTopic1.getTopic_id());
 
 
-        return ResponseEntity.ok(ApiResponse.success(discussionTopicDto, ErrorMsgandCode.Successupdate.getMsg()));
+        return ResponseEntity.ok(ApiResponse.success(discussionTopicDto, ErrorMsgandCode.Successupdate.getMsg()));}
+        catch(Exception e){
+
+            throw new EtcError();
+        }
     }
 
     public ResponseEntity<ApiResponse<List<TopicDto>>> gettopiclist(int page_num){
         Pageable page= PageRequest.of(page_num,3);
 
        Page<TopicDto> list= disscussionRepository.gettopics(page);
+
+
+        if(list.isLast()){
+            return ResponseEntity.ok(ApiResponse.success(list.stream().toList(),"마지막"));
+        }
+
+
         //페이지에 해당되는값이없다면 0을 돌려줌.
        if(list.isEmpty()){
 
-
-           return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+           throw new CantFindError();
+          // return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
        }
+
+
+
 
        return ResponseEntity.ok(ApiResponse.success(list.stream().toList(),ErrorMsgandCode.Successfind.getMsg()));
 
@@ -119,8 +135,8 @@ public class DiscussionService {
 
         }
 
-
-        return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failupdate.getMsg()));
+        throw new EtcError();
+        //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failupdate.getMsg()));
     }
 
 
@@ -153,8 +169,8 @@ public class DiscussionService {
 
         if(lists.isEmpty()){
 
-
-            return ResponseEntity.ok(ApiResponse.fail("실패"));
+            throw new CantFindError();
+            //return ResponseEntity.ok(ApiResponse.fail("실패"));
 
 
 
@@ -197,8 +213,8 @@ public class DiscussionService {
                 return ResponseEntity.ok(ApiResponse.success(new DiscussionTopicDto(discussionTopic.get().getWriter_email(),discussionTopic.get().getTopic_title(),discussionTopic.get().getSubject_title(),discussionTopic.get().getDeadline(),discussionTopic.get().getIntroduction_text()),ErrorMsgandCode.Successfind.getMsg()));
             }
 
-
-            return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+            throw new CantFindDataError();
+            //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
 
 
     }
@@ -210,19 +226,22 @@ public class DiscussionService {
         if(discussionTopic.isPresent()){
             log.info("시간체크:{}",now.isAfter(discussionTopic.get().getDeadline()));
             if(now.isAfter(discussionTopic.get().getDeadline())){
+                throw new CantFindError();
 
-                return ResponseEntity.ok(ApiResponse.success(ErrorMsgandCode.Successfind.getMsg(),ErrorMsgandCode.Successupdate.getMsg()));
+
 
 
             }
 
-            return ResponseEntity.ok(ApiResponse.fail("false"));
+            return ResponseEntity.ok(ApiResponse.success(ErrorMsgandCode.Successfind.getMsg(),ErrorMsgandCode.Successupdate.getMsg()));
+           // return ResponseEntity.ok(ApiResponse.fail("false"));
 
 
         }
 
 
-        return ResponseEntity.ok(ApiResponse.fail("false"));
+        throw new CantFindError();
+        //return ResponseEntity.ok(ApiResponse.fail("false"));
     }
 
 
@@ -235,8 +254,8 @@ public class DiscussionService {
         LocalDateTime now=LocalDateTime.now();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
-        String now_string=now.format(formatter);
-        return LocalDateTime.parse(now_string,formatter);
+        String now_string = now.format(formatter);
+        return LocalDateTime.parse(now_string, formatter);
     }
 
 

@@ -64,6 +64,18 @@ public class JwtUtil {
     }
 
 
+
+    public String genjwt(){
+
+
+        Long now=System.currentTimeMillis();
+
+
+        return now.toString();
+
+
+    }
+
     public String regenaccesstoken(Long id){
         //String claim=auth.stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
 

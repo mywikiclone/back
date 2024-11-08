@@ -4,6 +4,8 @@ package com.example.posttest.dtos;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 public class TopicDto {
@@ -22,6 +24,9 @@ public class TopicDto {
 
     private Long topic_id;
 
+
+
+    private LocalDateTime deadline_time;
 
     private String introduction_text;
 
@@ -46,6 +51,16 @@ public class TopicDto {
         this.writer_email=writer_email;
 
     }
+    public TopicDto(String topic_title, Long member_id, Long topic_id,String subject_title,String writer_email,LocalDateTime deadline_time) {
+        this.topic_title = topic_title;
+        this.member_id = member_id;
+        this.topic_id = topic_id;
+        this.subject_title=subject_title;
+        this.writer_email=writer_email;
+        this.deadline_time=deadline_time;
+
+    }
+
 
 
 }

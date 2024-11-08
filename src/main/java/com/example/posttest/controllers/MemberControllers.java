@@ -5,6 +5,7 @@ import com.example.posttest.dtos.MemberDto;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtToken;
+import com.example.posttest.etc.JwtUtil;
 import com.example.posttest.etc.annotataion.CheckNewToken;
 import com.example.posttest.service.MemberService;
 import jakarta.servlet.http.Cookie;
@@ -35,6 +36,9 @@ public class MemberControllers {
 
     private final MemberService memberService;
 
+
+    private final JwtUtil jwtUtil;
+
     @Value("${spring.jwt.expiration}")
     private  Long expiration;
 
@@ -60,8 +64,14 @@ public class MemberControllers {
 
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO,HttpServletRequest req){
-        ApiResponse<String> x= memberService.memberlogin(memberDTO,req);
-        ResponseCookie responseCookie=ResponseCookie.from("back_access_token","hello")
+        String csrf= memberService.memberlogin(memberDTO,req);
+
+
+
+
+
+
+        /*ResponseCookie responseCookie=ResponseCookie.from("back_access_token","hello")
                 .maxAge(expiration/1000)
                 .path("/")
                 .httpOnly(true)
@@ -79,13 +89,12 @@ public class MemberControllers {
                 .secure(true)
                 .sameSite("None")
                 .domain("localhost")
-                .build();
+                .build();*/
 
         HttpHeaders headers=new HttpHeaders();
 
-        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
-
-        headers.add(HttpHeaders.SET_COOKIE,responseCookie2.toString());
+        headers.add("Csrf_Check",csrf);
+        ApiResponse x= ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg());
 
         return new ResponseEntity<>(x,headers,HttpStatus.OK);
     };
@@ -101,14 +110,28 @@ public class MemberControllers {
     //토큰 재생성을 위한 refresh토큰 이용,refresh토큰 재생성 이건 내일.
 
 
+    @PostMapping("/changepassword")
+    public ResponseEntity<ApiResponse<String>> changepassword(@RequestBody MemberDto memberDTO){
+
+           return memberService.changepassword(memberDTO);
+
+    }
+
+
+
+
+
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> Logout(HttpServletRequest req){
 
         HttpSession session=req.getSession(false);
 
+
+
+
         if(session!=null){
 
-
+            log.info("로그아웃진행");
             session.invalidate();
         }
 

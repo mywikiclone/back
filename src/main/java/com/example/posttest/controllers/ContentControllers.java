@@ -1,10 +1,8 @@
 package com.example.posttest.controllers;
 
 
-import com.example.posttest.dtos.ChangeLogDto;
-import com.example.posttest.dtos.ContentDto;
-import com.example.posttest.dtos.IpDto;
-import com.example.posttest.dtos.RealTimeIssueDto;
+import com.example.posttest.Exceptions.CantFindError;
+import com.example.posttest.dtos.*;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtUtil;
@@ -14,11 +12,14 @@ import com.example.posttest.service.ContentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.data.repository.config.RepositoryNameSpaceHandler;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -79,6 +80,31 @@ public class ContentControllers {
     * 검색 칸에 제목으로 입력시 가져오는애 또한 검색했다는 기록도 남김.
     */
 
+    @PostMapping("/upload")
+    public ResponseEntity<ApiResponse<String>> uploadimgfile(@RequestParam("filedata")MultipartFile filedata){
+
+        log.info("empty:{}",filedata.isEmpty());
+        if(filedata.isEmpty()){
+
+
+
+            throw new CantFindError();
+        }
+        log.info("파일도착");
+        return contentService.uploadfile(filedata);
+
+
+    }
+
+    @GetMapping("/applyimg/{img_name}")
+    public ResponseEntity<Resource> getimg(@PathVariable("img_name") String img_name){
+
+        return contentService.getimgs(img_name);
+
+    }
+
+
+
     @GetMapping("/search/{title}")
     public ResponseEntity<ApiResponse<ContentDto>> FindContent(@PathVariable("title") String title/*,@CheckNewToken String newtoken*/){
 
@@ -134,6 +160,18 @@ public class ContentControllers {
 
     }
 
+    @GetMapping("/changelogs/{page_num}")
+    public ResponseEntity<ApiResponse<List<ChangeLogListDto>>> getallchangelogs(@PathVariable("page_num") int page_num){
+
+
+
+
+        return contentService.getchangelog(page_num);
+    }
+
+
+
+
 
     /*
     * 실시간 검색어 순위 10까지 탐색해서 content의 아이디값과 title을 돌려주는애.
@@ -142,7 +180,7 @@ public class ContentControllers {
     @GetMapping("/realtime")
     public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getrealtime(/*@CheckNewToken String newtoken*/){
 
-
+        log.info("realtime");
         return contentService.getRealtimeissue();
         //return return_ans_method(contentService.getRealtimeissue(),newtoken);
         //return ResponseEntity.ok(contentService.getRealtimeissue());
@@ -192,6 +230,7 @@ public class ContentControllers {
 
 
     }
+
 
 
    public <T>ResponseEntity<ApiResponse<T>> return_ans_method(ApiResponse<T> apiResponse,String token){

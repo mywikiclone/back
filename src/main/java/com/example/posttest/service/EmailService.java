@@ -1,10 +1,14 @@
 package com.example.posttest.service;
 
 
+import com.example.posttest.Exceptions.CantFindError;
+import com.example.posttest.Exceptions.EtcError;
 import com.example.posttest.dtos.MailAuthDto;
 import com.example.posttest.dtos.MailAuthDto2;
+import com.example.posttest.dtos.MemberDto;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
+import com.example.posttest.repository.memrepo.MemberRepository;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +35,46 @@ public class EmailService {
     @Value("${spring.mail.auth-code-expiration-millis}")
     private Integer time;
     private final RedisTemplate<String,String> redisTemplate;
+    
+    
+    private final MemberService memberService;
 
+    public ResponseEntity<ApiResponse<String>> create_password(String email){
+        log.info("mail service:{} {}",senderEmail,time);
+        int number=(int)(Math.random()*(999))+100;
+
+        MimeMessage mimeMessage=javaMailSender.createMimeMessage();
+        try {
+
+     
+            log.info("보낼주소:{}",email);
+            mimeMessage.setFrom(senderEmail);
+            mimeMessage.setRecipients(MimeMessage.RecipientType.TO,email);
+            mimeMessage.setText(Integer.toString(number),"UTF-8","plain");
+            javaMailSender.send(mimeMessage);
+            
+            
+           ResponseEntity<ApiResponse<String>> resp=memberService.changepassword(new MemberDto(email,String.valueOf(number)));
+
+           if(resp.getBody().getMsg().equals("업뎃실패")){
+               throw new Exception();
+           }
+            
+            
+            return ok(ApiResponse.success("메일전송성공", ErrorMsgandCode.Successlogin.getMsg()));
+        }
+        catch(Exception e){
+
+            throw new EtcError();
+            //return ok(ApiResponse.fail("메일전송실패"));
+        }
+
+
+    }
+    
+    
+    
+    
     public ResponseEntity<ApiResponse<String>> create_auth(String email){
         log.info("mail service:{} {}",senderEmail,time);
         int number=(int)(Math.random()*(999))+100;
@@ -58,8 +101,8 @@ public class EmailService {
         }
         catch(Exception e){
 
-
-            return ok(ApiResponse.fail("메일전송성공"));
+            throw new EtcError();
+            //return ok(ApiResponse.fail("메일전송성공"));
         }
 
 
@@ -83,8 +126,8 @@ public class EmailService {
 
         }
 
-
-        return ResponseEntity.ok(ApiResponse.fail("실퍄ㅐ"));
+        throw new CantFindError();
+        //return ResponseEntity.ok(ApiResponse.fail("실퍄ㅐ"));
 
 
 
