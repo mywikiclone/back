@@ -55,7 +55,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
 
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:3000","http://ec2-3-36-94-21.ap-northeast-2.compute.amazonaws.com")
+                .allowedOriginPatterns("http://localhost:3000","http://ec2-43-203-228-107.ap-northeast-2.compute.amazonaws.com")
                 .allowedMethods("*")
                 .allowedHeaders("*")//헤더도 이런설정이있따 ㅇㅇ;'
                 .exposedHeaders("Csrf_Check","Csrf_check")//z클라이언트가 응답을볼떄 볼수잇는 헤더지정
