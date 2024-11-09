@@ -175,8 +175,9 @@ public class MemberService {
         if(BCrypt.checkpw(memberDto.getPassword(),member.get().getPassword())){
 
 
-
+        log.info("----0-----");
         HttpSession session=req.getSession();
+        log.info("session:{}",session);
         log.info("----1----");
         session.setAttribute(LoginSessionConst.session_const,member.get().getMember_id());
             log.info("----2----");
