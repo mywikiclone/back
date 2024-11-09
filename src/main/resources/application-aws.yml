@@ -57,7 +57,7 @@ server:
         http-only: true
         path: /
         secure: true
-        domain: .ec2-54-180-237-28.ap-northeast-2.compute.amazonaws.com
+        domain: .ec2-43-203-242-68.ap-northeast-2.compute.amazonaws.com
         same-site: none
 
 
