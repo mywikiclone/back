@@ -26,23 +26,11 @@ public class WebConfig implements WebMvcConfigurer {
     private final RedisTemplate<String,String> redisTemplate;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor(jwtUtil,redisTemplate))
+        registry.addInterceptor(new LoginInterceptor(jwtUtil, redisTemplate))
                 .order(1)
-                .addPathPatterns("/update","/save","/admin/**","/topicsave","/savecomment","/changepassword");
+                .addPathPatterns("/update", "/save", "/admin/**", "/topicsave", "/savecomment", "/changepassword");
 
 
-
-
-
-
-    }
-    @Bean
-    public FilterRegistrationBean sameSiteCookieFilter() {
-        FilterRegistrationBean<CookieFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new CookieFilter());
-        registrationBean.addUrlPatterns("/firlogin"); // 모든 URL에 적용
-        registrationBean.setOrder(1);
-        return registrationBean;
     }
 
     @Override
