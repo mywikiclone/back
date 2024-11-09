@@ -62,6 +62,7 @@ public class ExceptionController {
     @ExceptionHandler({EtcError.class,Exception.class})
     public ResponseEntity<ApiResponse<String>> EtcError(Exception ex){
         log.info("에러종류:{}",ex.getClass());
+        log.info("에러내용:{}",ex.getMessage());
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_Etc_Error.getMsg()),HttpStatus.OK);
     }
 
