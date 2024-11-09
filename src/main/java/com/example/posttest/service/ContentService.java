@@ -132,7 +132,7 @@ public class ContentService {
 
             filename = TxtFilter.file_name_filter(filename);
 
-            String [] end_name={"jpeg","png","jpg"};
+            String [] end_name={"jpeg","png","jpg","gif"};
 
             String file_search_name="";
             for(String end:end_name) {

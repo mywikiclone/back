@@ -59,7 +59,7 @@ public class ExceptionController {
     }
 
 
-    @ExceptionHandler(EtcError.class)
+    @ExceptionHandler({EtcError.class,Exception.class})
     public ResponseEntity<ApiResponse<String>> EtcError(Exception ex){
         log.info("에러종류:{}",ex.getClass());
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_Etc_Error.getMsg()),HttpStatus.OK);
@@ -85,7 +85,6 @@ public class ExceptionController {
         log.info("에러종류:{}",ex.getClass());
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_No_Power.getMsg()),HttpStatus.OK);
     }
-
 
 
 
