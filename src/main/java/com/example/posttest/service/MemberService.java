@@ -177,11 +177,13 @@ public class MemberService {
 
 
         HttpSession session=req.getSession();
-
+        log.info("----1----");
         session.setAttribute(LoginSessionConst.session_const,member.get().getMember_id());
+            log.info("----2----");
         String csrf=jwtUtil.genjwt();
+            log.info("----3----");
         session.setAttribute("csrf",csrf);
-
+            log.info("----4----");
 
         log.info("csrf end");
         return csrf;
