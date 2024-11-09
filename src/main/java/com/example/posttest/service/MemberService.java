@@ -176,7 +176,9 @@ public class MemberService {
 
 
         log.info("----0-----");
+        log.info("reqcommit:{}",req.getSession());
         HttpSession session=req.getSession();
+
         log.info("session:{}",session);
         log.info("----1----");
         session.setAttribute(LoginSessionConst.session_const,member.get().getMember_id());
