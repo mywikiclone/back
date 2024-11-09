@@ -170,6 +170,8 @@ public class MemberService {
             throw new UnableToFindAccount();
         }
 
+
+        log.info("true:{}",BCrypt.checkpw(memberDto.getPassword(),member.get().getPassword()));
         if(BCrypt.checkpw(memberDto.getPassword(),member.get().getPassword())){
 
 
@@ -180,6 +182,8 @@ public class MemberService {
         String csrf=jwtUtil.genjwt();
         session.setAttribute("csrf",csrf);
 
+
+        log.info("csrf end");
         return csrf;
 
             //return ResponseEntity.ok(ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg()));
