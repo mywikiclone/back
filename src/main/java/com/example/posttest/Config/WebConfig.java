@@ -7,6 +7,14 @@ import com.example.posttest.etc.filter.CookieFilter;
 import com.example.posttest.etc.logininterceptors.ExcessAccessInterCeptor;
 import com.example.posttest.etc.logininterceptors.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.tomcat.util.http.CookieProcessorBase;
+import org.apache.tomcat.util.http.LegacyCookieProcessor;
+import org.apache.tomcat.util.http.Rfc6265CookieProcessor;
+import org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +23,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 
 import java.util.List;
 
@@ -38,6 +47,44 @@ public class WebConfig implements WebMvcConfigurer {
 
 
     }
+
+
+    @Bean
+    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> cookieProcessorCustomizer() {
+        return (factory) -> factory.addContextCustomizers(
+
+                (context) -> context.setCookieProcessor(new LegacyCookieProcessor()));
+    }
+
+
+    /*@Bean
+    public WebServerFactoryCustomizer<TomcatWebServer> tomcatCustomizer() {
+        return factory -> {
+            if (factory instanceof TomcatWebServer) {
+                Tomcat tomcat = ((TomcatWebServer) factory).getTomcat();
+
+
+                tomcat.getEngine().setCookieProcessor(new LegacyCookieProcessor());
+            }
+        };
+    }*/
+
+
+
+    /*@Bean
+    public EmbeddedServletContainerCustomizer tomcatCustomizer() {
+        return container -> {
+            if (container instanceof TomcatEmbeddedServletContainerFactory) {
+                TomcatEmbeddedServletContainerFactory tomcat = (TomcatEmbeddedServletContainerFactory) container;
+                tomcat.addContextCustomizers(context -> context.setCookieProcessor(new LegacyCookieProcessor()));
+            }
+        };
+    }*/
+
+
+
+
+
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {

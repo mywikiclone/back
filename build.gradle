@@ -46,6 +46,13 @@ dependencies {
 	// Apache Tika 의존성 추가
 	implementation 'org.apache.tika:tika-core:2.8.0'   // Tika 코어 모듈
 	implementation 'org.apache.tika:tika-parsers:2.8.0' // Tika 파서 모듈 (텍스트 추출 및 파일 분석)
+
+
+	implementation 'org.apache.tomcat.embed:tomcat-embed-core:9.0.68'
+	//별지랄 똥꼬소를 해봣는대 legacycookieprocess의경우 9.x버저네서만 지원되고 그이후 최신 tomcat에서는 없다
+	//그러므로 강제로 톰캣을 이렇게바꿔야 yml 에서domain부분에다가 .을 포함한 서브도메인 설정이가능해진다...
+
+
 }
 
 tasks.named('test') {
