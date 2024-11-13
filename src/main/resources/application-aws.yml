@@ -57,7 +57,7 @@ server:
         http-only: true
         path: /
         secure: true
-        domain: mywikifront.mywikiback.shop
+        domain: .mywikiback.shop
         #.compute.amazonaws.com
         #An invalid domain [.ec2-43-203-242-68.ap-northeast                    -2.compute.amazonaws.com] was specified for this cookie
         #라는 에러가뜨는대 알보고니 ip가들어가는애들은 슬수가없다고한다 그래서 뒤의 compute~~만남기도 하위도메인개념으로 .을 넣어줫다 . httpsession생ㅅ어중에 만난 오류이다!
