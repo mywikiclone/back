@@ -25,7 +25,10 @@ public enum ErrorMsgandCode {
 
     Fail_Find_Data("해당되는 데이터가없습니다"),
 
-    Fail_No_Power("권한 부족!");
+    Fail_No_Power("권한 부족!"),
+
+
+    Fail_Access_Excced_Error("입력횟수를 초과했습니다");
 
 
 

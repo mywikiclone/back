@@ -4,6 +4,7 @@ import com.example.posttest.etc.JwtUtil;
 import com.example.posttest.etc.annotataion.LoginAnnotationResolver;
 import com.example.posttest.etc.annotataion.NewTokenResolver;
 import com.example.posttest.etc.filter.CookieFilter;
+import com.example.posttest.etc.logininterceptors.ExcessAccessInterCeptor;
 import com.example.posttest.etc.logininterceptors.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -27,8 +28,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor(jwtUtil, redisTemplate))
-                .order(1)
+                .order(2)
                 .addPathPatterns("/update", "/save", "/admin/**", "/topicsave", "/savecomment", "/changepassword");
+
+
+        registry.addInterceptor(new ExcessAccessInterCeptor(redisTemplate))
+                .order(1)
+                .addPathPatterns("/firlogin");
 
 
     }
@@ -43,7 +49,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
 
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:3000","http://ec2-43-203-242-68.ap-northeast-2.compute.amazonaws.com")
+                .allowedOriginPatterns("http://localhost:3000","http://mywikifront.mywikiback.shop")
                 .allowedMethods("*")
                 .allowedHeaders("*")//헤더도 이런설정이있따 ㅇㅇ;'
                 .exposedHeaders("Csrf_Check","Csrf_check")//z클라이언트가 응답을볼떄 볼수잇는 헤더지정

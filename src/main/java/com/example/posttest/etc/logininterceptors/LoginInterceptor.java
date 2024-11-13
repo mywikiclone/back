@@ -39,6 +39,9 @@ public class LoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
 
+
+
+
         log.info("===========인터셉터호출==============");
         log.info("controller:{}",handler.getClass());
         log.info("들어온 경로:{}",request.getRequestURI());
@@ -65,9 +68,9 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         }
 
-        String token=request.getHeader("Csrf_Check");
+        String token=request.getHeader("Csrf_check");
         String csrf=(String) httpSession.getAttribute("csrf");
-
+        log.info("csrf:{} {}  {}",csrf,token,csrf.equals(token));
         if(csrf.equals(token)){
 
 
@@ -75,6 +78,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
 
         else{
+
+            httpSession.invalidate();
 
             throw new CsrfError();
         }
@@ -89,8 +94,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-        log.info("aftercompletion controller    :{}",handler.getClass());
-        log.info("=====인터셉터종료======");
+
     }
 
 

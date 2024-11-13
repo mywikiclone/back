@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -117,8 +118,13 @@ public class MemberService {
         Optional<Member> member=memberRepository.findById(member_id);
 
 
+        HttpHeaders httpHeaders=new HttpHeaders();
 
-        return ResponseEntity.ok(ApiResponse.success(new MemberDto(member.get().getEmail(),""),ErrorMsgandCode.Successlogin.getMsg()));
+
+        httpHeaders.set("Csrf_check",(String) session.getAttribute("csrf"));
+
+        return new ResponseEntity<>(ApiResponse.success(new MemberDto(member.get().getEmail(),""),ErrorMsgandCode.Successlogin.getMsg()),httpHeaders,HttpStatus.OK);
+
        /* Optional<String> token=get_token_from_req(req);
 
 
@@ -171,22 +177,20 @@ public class MemberService {
         }
 
 
-        log.info("true:{}",BCrypt.checkpw(memberDto.getPassword(),member.get().getPassword()));
+
         if(BCrypt.checkpw(memberDto.getPassword(),member.get().getPassword())){
 
 
-        log.info("----0-----");
-        log.info("reqcommit:{}",req.getSession());
+
         HttpSession session=req.getSession();
 
-        log.info("session:{}",session);
-        log.info("----1----");
+   ;
         session.setAttribute(LoginSessionConst.session_const,member.get().getMember_id());
-            log.info("----2----");
+
         String csrf=jwtUtil.genjwt();
-            log.info("----3----");
+
         session.setAttribute("csrf",csrf);
-            log.info("----4----");
+
 
         log.info("csrf end");
         return csrf;

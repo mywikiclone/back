@@ -93,7 +93,7 @@ public class MemberControllers {
 
         HttpHeaders headers=new HttpHeaders();
 
-        headers.add("Csrf_Check",csrf);
+        headers.add("Csrf_check",csrf);
         ApiResponse x= ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg());
 
         return new ResponseEntity<>(x,headers,HttpStatus.OK);
