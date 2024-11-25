@@ -167,7 +167,7 @@ public class MemberService {
 
             throw new UnableToFindAccount();
         }
-
+        log.info("hmm...");
 
         if(nums==null){
             opsforhash.put("try_login",memberDto.getEmail(),String.valueOf(1L));
@@ -186,7 +186,7 @@ public class MemberService {
 
 
 
-
+        log.info("here");
         if(BCrypt.checkpw(memberDto.getPassword(), member.get().getPassword())){
 
 

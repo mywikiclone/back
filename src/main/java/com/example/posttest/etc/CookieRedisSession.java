@@ -109,11 +109,13 @@ public class CookieRedisSession {
 
         try {
             String session_key = UUID.randomUUID().toString();
-
+            log.info("뭐가문제인가?") ;
             String csrf = jwtUtil.genjwt();
             UserSession userSession = new UserSession(memberid, csrf);
+            log.info("1");
             redisTemplate.opsForValue().set(session_key,objectMapper.writeValueAsString(userSession),1800L, TimeUnit.SECONDS);
-            redisTemplate.opsForHash().put("login",String.valueOf(memberid),true);
+            log.info("2");
+
             return new String[] {session_key,csrf};
 
         }
