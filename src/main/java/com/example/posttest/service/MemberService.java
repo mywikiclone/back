@@ -157,11 +157,11 @@ public class MemberService {
 
         Optional<Member> member = memberRepository.findmember_beforeassign(memberDto.getEmail());
 
-
+        log.info("memberdata:{}",member);
 
         HashOperations<String,String,String> opsforhash=redisTemplate.opsForHash();
         String nums=(String) opsforhash.get("try_login",memberDto.getEmail());
-
+        log.info("nums:{}",nums);
         if(member.isEmpty()) {
 
 
@@ -194,7 +194,7 @@ public class MemberService {
 
         String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
 
-
+        log.info("success!");
 
         return  s;
 

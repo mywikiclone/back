@@ -59,6 +59,7 @@ public class MemberControllers {
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO,HttpServletRequest req){
         log.info("request header:{}",req.getRemoteUser());
+        log.info("request object:{}",req);
         log.info("request header2:{}",req.getHeader("x-forwarded-for "));
         String [] strs= memberService.memberlogin(memberDTO);
 
