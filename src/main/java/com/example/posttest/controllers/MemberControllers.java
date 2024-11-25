@@ -58,18 +58,19 @@ public class MemberControllers {
 
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO,HttpServletRequest req){
-        log.info("request header:{}",req.getRemoteUser());
+
         log.info("request ip:{}",req.getRemoteAddr());
         log.info("request object:{}",req);
         log.info("request header2:{}",req.getHeader("X-Forwarded-For"));
         String [] strs= memberService.memberlogin(memberDTO);
 
+
         ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
                 .secure(true)
                 .httpOnly(true)
-                .sameSite("none")
+                .sameSite("strict")
                 .maxAge(1800)
-                .domain("localhost")
+                .domain(".mywikiback.shop")
                 .path("/")
                 .build();
 

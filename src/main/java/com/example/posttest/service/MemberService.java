@@ -157,17 +157,17 @@ public class MemberService {
 
         Optional<Member> member = memberRepository.findmember_beforeassign(memberDto.getEmail());
 
-        log.info("memberdata:{}",member);
+
 
         HashOperations<String,String,String> opsforhash=redisTemplate.opsForHash();
         String nums=(String) opsforhash.get("try_login",memberDto.getEmail());
-        log.info("nums:{}",nums);
+
         if(member.isEmpty()) {
 
 
             throw new UnableToFindAccount();
         }
-        log.info("hmm...");
+
 
         if(nums==null){
             opsforhash.put("try_login",memberDto.getEmail(),String.valueOf(1L));
@@ -186,7 +186,6 @@ public class MemberService {
 
 
 
-        log.info("here");
         if(BCrypt.checkpw(memberDto.getPassword(), member.get().getPassword())){
 
 
@@ -194,7 +193,6 @@ public class MemberService {
 
         String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
 
-        log.info("success!");
 
         return  s;
 
