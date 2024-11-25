@@ -18,18 +18,21 @@ public class ChangeLog extends Times {
     private Content content;
 
 
+
+
+    @OneToOne(fetch = FetchType.LAZY)
+    private LobContent lobContent;
+
+
+
     @ManyToOne
     @JoinColumn(name="member_id")
     private Member member;
 
 
-
-
-    private String Changed_Content;
-
-    public ChangeLog(Content content, String changed_Content,Member member) {
-        this.content = content;
-        this.Changed_Content = changed_Content;
-        this.member=member;
+    public ChangeLog(Content content, LobContent lobContent, Member member) {
+        this.content=content;
+        this.lobContent = lobContent;
+        this.member = member;
     }
 }

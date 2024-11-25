@@ -27,31 +27,37 @@ public class Content extends Times {
 
     private String title;
 
-    @Lob
-    private String content;
+/*@Lob
+    private String content;*/
 
 
+    @OneToOne(fetch =FetchType.LAZY)
+    @JoinColumn(name="lob_id")
+    private LobContent lobContent;
 
-    private UserAdmin grade;
+
+    @OneToOne(fetch =FetchType.LAZY)
+
+    private ContentAdmin grade;
 
 
-    public Content(String title, String content) {
+    public Content(String title, LobContent content) {
         this.title = title;
-        this.content = content;
+        this.lobContent= content;
     }
 
 
-    public Content(Member member, String title, String content) {
+    public Content(Member member, String title, LobContent content) {
         this.member = member;
         this.title = title;
-        this.content = content;
+        this.lobContent = content;
     }
 
 
-    public Content( Member member, String title, String content, UserAdmin grade) {
+    public Content( Member member, String title, LobContent content, ContentAdmin grade) {
         this.member = member;
         this.title = title;
-        this.content = content;
+        this.lobContent = content;
         this.grade = grade;
     }
 

@@ -1,22 +1,14 @@
 package com.example.posttest.Config;
 
+import com.example.posttest.etc.CookieRedisSession;
 import com.example.posttest.etc.JwtUtil;
 import com.example.posttest.etc.annotataion.LoginAnnotationResolver;
 import com.example.posttest.etc.annotataion.NewTokenResolver;
-import com.example.posttest.etc.filter.CookieFilter;
+
 import com.example.posttest.etc.logininterceptors.ExcessAccessInterCeptor;
 import com.example.posttest.etc.logininterceptors.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.startup.Tomcat;
-import org.apache.tomcat.util.http.CookieProcessorBase;
-import org.apache.tomcat.util.http.LegacyCookieProcessor;
-import org.apache.tomcat.util.http.Rfc6265CookieProcessor;
-import org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
-import org.springframework.boot.web.server.WebServerFactoryCustomizer;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -32,29 +24,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    private final JwtUtil jwtUtil;
+    private final CookieRedisSession cookieRedisSession;
     private final RedisTemplate<String,String> redisTemplate;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor(jwtUtil, redisTemplate))
-                .order(2)
+        registry.addInterceptor(new LoginInterceptor(cookieRedisSession))
+                .order(1)
                 .addPathPatterns("/update", "/save", "/admin/**", "/topicsave", "/savecomment", "/changepassword");
 
 
-        registry.addInterceptor(new ExcessAccessInterCeptor(redisTemplate))
+        /*registry.addInterceptor(new ExcessAccessInterCeptor(redisTemplate))
                 .order(1)
-                .addPathPatterns("/firlogin");
+                .addPathPatterns("/firlogin");*/
 
 
     }
 
 
-    @Bean
-    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> cookieProcessorCustomizer() {
-        return (factory) -> factory.addContextCustomizers(
 
-                (context) -> context.setCookieProcessor(new LegacyCookieProcessor()));
-    }
 
 
     /*@Bean
@@ -88,7 +76,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new LoginAnnotationResolver(jwtUtil));
+        resolvers.add(new LoginAnnotationResolver(cookieRedisSession));
         resolvers.add(new NewTokenResolver());
     }
 

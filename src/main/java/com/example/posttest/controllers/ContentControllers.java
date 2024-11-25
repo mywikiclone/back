@@ -9,6 +9,8 @@ import com.example.posttest.etc.JwtUtil;
 import com.example.posttest.etc.annotataion.CheckNewToken;
 import com.example.posttest.etc.annotataion.LoginUser;
 import com.example.posttest.service.ContentService;
+
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,19 +50,18 @@ public class ContentControllers {
 
     }
 
+
+
+
+
     /*
     * 글저장 하기
     */
     @PostMapping("/save")
-    public ResponseEntity<ApiResponse<ContentDto>> SaveContent(@LoginUser Long member_id,@RequestBody ContentDto contentDto/*,@CheckNewToken String newtoken*/){
+    public ResponseEntity<ApiResponse<ContentDto>> SaveContent(@LoginUser UserSessionTot userSessionTot,@RequestBody ContentDto contentDto/*,@CheckNewToken String newtoken*/){
 
-        return contentService.ContentSave(contentDto,member_id);
-        /*log.info("data:{} {}",contentDto.getContent(),contentDto.getTitle());
-        Long memberid=optionalnumscheck(member_id,newtoken);
+        return contentService.ContentSave(contentDto,userSessionTot);
 
-
-        return return_ans_method(contentService.ContentSave(contentDto,member_id),newtoken);*/
-        //return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successlogin.getMsg()));
     }
 
 
@@ -69,8 +70,8 @@ public class ContentControllers {
     * 편집한 내용 기반으로 업데이트 및 changelog에다가 기록을 남기는애
     */
     @PostMapping("/update")
-    public ResponseEntity<ApiResponse<String>> UpdateContent(@LoginUser Long member_id,@RequestBody ContentDto contentDto/*,@CheckNewToken String newtoken*/){
-        return contentService.UpdateContent(member_id,contentDto);
+    public ResponseEntity<ApiResponse<String>> UpdateContent(@LoginUser UserSessionTot userSessionTot,@RequestBody ContentDto contentDto/*,@CheckNewToken String newtoken*/){
+        return contentService.UpdateContent(userSessionTot,contentDto);
         /*long memberid=optionalnumscheck(member_id,newtoken);
         return return_ans_method(contentService.UpdateContent(memberid,contentDto),newtoken);*/
     }
@@ -102,6 +103,7 @@ public class ContentControllers {
         return contentService.getimgs(img_name);
 
     }
+
 
 
 
@@ -224,12 +226,6 @@ public class ContentControllers {
        //return ResponseEntity.ok(contentService.FindContent());
    }
 
-    @GetMapping("/testing")
-    public void test(){
-       contentService.testing();
-
-
-    }
 
 
 

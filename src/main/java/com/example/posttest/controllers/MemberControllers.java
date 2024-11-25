@@ -2,15 +2,11 @@ package com.example.posttest.controllers;
 
 
 import com.example.posttest.dtos.MemberDto;
-import com.example.posttest.etc.ApiResponse;
-import com.example.posttest.etc.ErrorMsgandCode;
-import com.example.posttest.etc.JwtToken;
-import com.example.posttest.etc.JwtUtil;
-import com.example.posttest.etc.annotataion.CheckNewToken;
+import com.example.posttest.etc.*;
 import com.example.posttest.service.MemberService;
-import jakarta.servlet.http.Cookie;
+
+
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,10 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -36,20 +28,22 @@ public class MemberControllers {
 
     private final MemberService memberService;
 
-
     private final JwtUtil jwtUtil;
 
     @Value("${spring.jwt.expiration}")
     private  Long expiration;
 
     @PostMapping("/assign")
-    public ResponseEntity<ApiResponse<String>> assign(@RequestBody MemberDto memberDTO){
-        return memberService.memberassign(memberDTO);
+    public ResponseEntity<ApiResponse<String>> assign(@RequestBody MemberDto memberDTO,HttpServletRequest req){
+        return memberService.memberassign(memberDTO,req);
 
 
 
         //return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
     };
+
+
+
 
 
     @PostMapping("/idcheck")
@@ -64,36 +58,23 @@ public class MemberControllers {
 
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO,HttpServletRequest req){
-        String csrf= memberService.memberlogin(memberDTO,req);
+        log.info("request header:{}",req.getRemoteUser());
+        log.info("request header2:{}",req.getHeader("x-forwarded-for "));
+        String [] strs= memberService.memberlogin(memberDTO);
 
-
-
-
-
-
-        /*ResponseCookie responseCookie=ResponseCookie.from("back_access_token","hello")
-                .maxAge(expiration/1000)
-                .path("/")
-                .httpOnly(true)
+        ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
                 .secure(true)
-                .sameSite("None")
+                .httpOnly(true)
+                .sameSite("none")
+                .maxAge(1800)
                 .domain("localhost")
+                .path("/")
                 .build();
 
 
-
-        ResponseCookie responseCookie2=ResponseCookie.from("back_refresh_token","hello")
-                .maxAge(expiration/1000)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("localhost")
-                .build();*/
-
         HttpHeaders headers=new HttpHeaders();
-
-        headers.add("Csrf_check",csrf);
+        headers.add("Csrf_check",strs[1]);
+        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
         ApiResponse x= ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg());
 
         return new ResponseEntity<>(x,headers,HttpStatus.OK);
@@ -119,62 +100,40 @@ public class MemberControllers {
 
 
 
+    @PostMapping("/securelogin")
+    public ResponseEntity<ApiResponse<String>> securelogin(@RequestBody MemberDto memberDTO){
+        String [] strs= memberService.membersecurelogin(memberDTO);
+
+        ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
+                .secure(true)
+                .httpOnly(true)
+                .sameSite("none")
+                .maxAge(1800)
+                .domain("localhost")
+                .path("/")
+                .build();
+
+
+        HttpHeaders headers=new HttpHeaders();
+        headers.add("Csrf_check",strs[1]);
+        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
+        ApiResponse x= ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg());
+
+        return new ResponseEntity<>(x,headers,HttpStatus.OK);
+    };
+
+
 
 
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> Logout(HttpServletRequest req){
 
-        HttpSession session=req.getSession(false);
+
+        return memberService.logout(req);
 
 
 
 
-        if(session!=null){
-
-            log.info("로그아웃진행");
-            session.invalidate();
-        }
-
-
-
-        return ResponseEntity.ok(ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg()));
-
-
-
-        /*Cookie[] cookies=req.getCookies();
-        Optional<Cookie> cookie=Arrays.stream(cookies).filter(x->"back_refresh_token".equals(x.getName())).findFirst();
-        ApiResponse<String> a=memberService.logout(cookie.get().getValue());
-        ResponseCookie responseCookie=ResponseCookie.from("back_access_token",null)
-                .maxAge(0)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("localhost")
-                .build();
-
-        ResponseCookie responseCookie2=ResponseCookie.from("back_refresh_token",null)
-                .maxAge(0)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("localhost")
-                .build();
-
-
-
-        HttpHeaders headers=new HttpHeaders();
-
-
-        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
-
-        headers.add(HttpHeaders.SET_COOKIE,responseCookie2.toString());
-
-        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
-
-
-        return new ResponseEntity<>(a,headers,HttpStatus.OK);*/
 
       }
 

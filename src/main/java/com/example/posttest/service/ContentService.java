@@ -2,19 +2,16 @@ package com.example.posttest.service;
 
 import com.example.posttest.Exceptions.*;
 import com.example.posttest.dtos.*;
-import com.example.posttest.entitiy.ChangeLog;
-import com.example.posttest.entitiy.Content;
-import com.example.posttest.entitiy.Member;
-import com.example.posttest.entitiy.RealTimeIssue;
-import com.example.posttest.etc.ApiResponse;
-import com.example.posttest.etc.ErrorMsgandCode;
-import com.example.posttest.etc.TxtFilter;
-import com.example.posttest.etc.UserAdmin;
+import com.example.posttest.entitiy.*;
+import com.example.posttest.etc.*;
+import com.example.posttest.repository.ContentAdminRepo;
+import com.example.posttest.repository.LobRepository;
 import com.example.posttest.repository.changelogrepo.ChangeLongRepo;
 import com.example.posttest.repository.contentrepositories.ContentRepository;
 import com.example.posttest.repository.memrepo.MemberRepository;
 import com.example.posttest.repository.realtimerepo.RealTimeRepo;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.Lob;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -30,6 +27,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -42,20 +46,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class ContentService {
 
 
+    private final ContentAdminRepo contentAdminRepo;
     private final ContentRepository contentRepository;
     private final ChangeLongRepo changeLongRepo;
     private final RealTimeRepo realTimeRepo;
     private final MemberRepository memberRepository;
-
     private final ResourceLoader resourceLoader;
-
-
+    private final CookieRedisSession cookieRedisSession;
+    private final LobRepository lobRepository;
     public ResponseEntity<ApiResponse<String>> uploadfile(MultipartFile file){
 
 
@@ -165,47 +168,74 @@ public class ContentService {
 
 
 
-    public ResponseEntity<ApiResponse<ContentDto>> ContentSave(ContentDto contentDto, Long member_id){
 
-            try {
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<ApiResponse<ContentDto>> ContentSave(ContentDto contentDto, UserSessionTot userSessionTot){
+
+            long member_id=userSessionTot.getUserSession().getMember_id();
+
+
                 Optional<Member> member = memberRepository.findById(member_id);
 
-                Content content = new Content(member.get(), contentDto.getTitle(), contentDto.getContent(), UserAdmin.User);
+                LobContent lobcontent=new LobContent(contentDto.getContent());
+
+                lobcontent=lobRepository.save(lobcontent);
+
+
+                ContentAdmin contentAdmin=new ContentAdmin(UserAdmin.User);
+                contentAdminRepo.save(contentAdmin);
+
+                Content content = new Content(member.get(), contentDto.getTitle(), lobcontent, contentAdmin);
 
                 content.setCreate_Time(LocalDateTime.now());
                 content.setUpdate_Time(LocalDateTime.now());
 
                 Content content1 = contentRepository.save(content);
-                log.info("content1:{} {} {} {} {}", content1.getTitle(), content1.getContent_id(), content1.getUpdate_Time(), content.getContent(), content1.getMember().getEmail());
 
-                return ResponseEntity.ok(ApiResponse.success(new ContentDto(content1.getContent_id(), content1.getTitle(), content1.getContent(), content1.getMember().getEmail(), content1.getUpdate_Time()), ErrorMsgandCode.Successfind.getMsg()));
-            }
-            catch (Exception e){
 
-                throw new EtcError();
-        }
+                ChangeLog changeLog=new ChangeLog(content,lobcontent,member.get());
+                changeLongRepo.save(changeLog);
+
+                HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"extend");
+
+
+
+
+                return new ResponseEntity(ApiResponse.success(new ContentDto(content1.getContent_id(), content1.getTitle(), lobcontent.getContent(), content1.getMember().getEmail(), content1.getUpdate_Time()), ErrorMsgandCode.Successfind.getMsg()),headers,HttpStatus.OK);
+
+
     }
 
 
-    public ResponseEntity<ApiResponse<String>> UpdateContent(Long member_id,ContentDto contentDto){
-            Optional<Content> content_opt=contentRepository.findById(contentDto.getContent_id());
 
 
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public ResponseEntity<ApiResponse<String>> UpdateContent(UserSessionTot userSessionTot,ContentDto contentDto){
+
+            log.info("update");
+            long member_id=userSessionTot.getUserSession().getMember_id();;
+            Optional<Content> content_opt=contentRepository.findbyidwithforupdate(contentDto.getContent_id());
 
             LocalDateTime now=LocalDateTime.now();
             if(content_opt.isPresent()){
                 Optional<Member> member=memberRepository.findById(member_id);
 
-                if(gradecheck(content_opt.get(),member.get())){
-                    int x = contentRepository.updatecontent(contentDto.getTitle(), contentDto.getContent(), now, contentDto.getContent_id());
 
-                    log.info("content_dto,member_id:{} {}", contentDto, member_id);
-                    log.info("object check:{} {}", content_opt.get(), member.get());
-                    ChangeLog changeLog = new ChangeLog(content_opt.get(), contentDto.getContent(), member.get());
+                if(gradecheck(content_opt.get(),member.get())){
+
+                    LobContent lobContent=new LobContent(contentDto.getContent());
+                    lobContent=lobRepository.save(lobContent);
+                    content_opt.get().setLobContent(lobContent);
+                    content_opt.get().setCreate_Time(now);
+                    contentRepository.save(content_opt.get());
+                    ChangeLog changeLog = new ChangeLog(content_opt.get(),lobContent, member.get());
                     changeLog.setCreate_Time(now);
                     changeLongRepo.save(changeLog);
-                    return ResponseEntity.ok(ApiResponse.success(now.toString(), ErrorMsgandCode.Successupdate.getMsg()));
+                    HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"extend");
+                    return new ResponseEntity(ApiResponse.success(now.toString(), ErrorMsgandCode.Successupdate.getMsg()),headers,HttpStatus.OK);
+
+
 
                 }
 
@@ -227,6 +257,7 @@ public class ContentService {
 
 
 
+
     /*
     *
     * 찾앗다는걸 기록하는 메서드.
@@ -244,7 +275,11 @@ public class ContentService {
 
 
 
+
+    @Transactional
     public ResponseEntity<ApiResponse<ContentDto>> FindContent(Long id){
+
+
         Optional<Content> content=contentRepository.findById(id);
 
         if(content.isEmpty()){
@@ -253,23 +288,25 @@ public class ContentService {
             //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
         }
         saveRealTime(content.get());
-        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().name());
+        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name());
         return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));
     }
 
 
+    @Transactional
     public ResponseEntity<ApiResponse<ContentDto>> FindContent(){
         Optional<Content> content=contentRepository.random_logic();
 
         if(content.isPresent()) {
             saveRealTime(content.get());
-            return ResponseEntity.ok(ApiResponse.success(new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().name()), ErrorMsgandCode.Successfind.getMsg()));
+            return ResponseEntity.ok(ApiResponse.success(new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name()), ErrorMsgandCode.Successfind.getMsg()));
         }
 
         throw new CantFindDataError();
         //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
     }
 
+    @Transactional
     public ApiResponse<ContentDto> FindContent(String title){
         Optional<Content> content=contentRepository.findbytitle(title);
 
@@ -279,13 +316,13 @@ public class ContentService {
             //return ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg());
         }
         saveRealTime(content.get());
-        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().name());
+        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(), content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name());
         return ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg());
     }
 
 
 
-
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<ChangeLogListDto>>> getchangelog(int page_num){
 
 
@@ -309,7 +346,7 @@ public class ContentService {
     }
 
 
-
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<ChangeLogDto>>> getchangelog(int page_num, Long id){
          Pageable page=PageRequest.of(page_num,12);
          Page<ChangeLogDto> changeLogs=changeLongRepo.getchangelogs(id,page);
@@ -338,6 +375,10 @@ public class ContentService {
          return ResponseEntity.ok(ApiResponse.success(changeLogs.stream().toList(),ErrorMsgandCode.Successfind.getMsg()));
     }
 
+
+
+
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<ContentDto>> getchanagelogtext(Long id){
         Optional<ChangeLog> changeLog=changeLongRepo.findById(id);
 
@@ -345,7 +386,7 @@ public class ContentService {
 
         if(changeLog.isPresent()){
         ChangeLog c=changeLog.get();
-        ContentDto contentDto=new ContentDto(c.getMember().getMember_id(),c.getContent().getTitle(),c.getChanged_Content(),c.getUpdate_Time());
+        ContentDto contentDto=new ContentDto(c.getMember().getMember_id(),c.getContent().getTitle(),c.getLobContent().getContent(),c.getUpdate_Time());
 
 
         return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));}
@@ -356,25 +397,16 @@ public class ContentService {
 
     }
 
-
-
-    public void testing(){
-
-    Optional<RealTimeIssue> rel=realTimeRepo.getreal();
-    log.info("rel:{}",rel);
-    }
-
-
-
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getRealtimeissue(){
 
         Pageable pageable=PageRequest.of(0,10);
         LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
 
 
-        log.info("realtime작동");
+
         Page<RealTimeIssueListDto> realTimeIssues=realTimeRepo.getrealtime(pageable,now);
-        log.info("realtime작동:{}",realTimeIssues.isEmpty());
+
         if(realTimeIssues.isEmpty()){
 
             throw new CantFindError();
@@ -394,6 +426,9 @@ public class ContentService {
         return ResponseEntity.ok(ApiResponse.success(realTimeIssueDtoList,ErrorMsgandCode.Successfind.getMsg()));
     }
 
+
+
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getlastchagelogs(){
         LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
 
@@ -416,11 +451,14 @@ public class ContentService {
 
     }
 
-
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> search_logic(String title){
             Pageable pageable=PageRequest.of(0,10);
             Page<Content> contents=contentRepository.search_logic(title,pageable);
             if(contents.isEmpty()){
+
+
+
 
                 throw new CantFindError();
                 //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
@@ -440,13 +478,10 @@ public class ContentService {
 
 
 
-
-
-
     public boolean  gradecheck(Content content,Member member){
-        UserAdmin content_grade=content.getGrade();
+        UserAdmin content_grade=content.getGrade().getGrade();
 
-        UserAdmin member_grade=content.getGrade();
+        UserAdmin member_grade=member.getGrade().getGrade();
 
 
 

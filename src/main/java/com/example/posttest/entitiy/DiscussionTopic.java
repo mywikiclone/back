@@ -25,20 +25,27 @@ public class DiscussionTopic extends Times{
 
     private String writer_email;
 
-    private String subject_title;
+    //private String subject_title;
 
     private String topic_title;
+
+
+
+    @ManyToOne
+    @JoinColumn(name="content_id")
+    private Content content;
+
 
     private LocalDateTime deadline;
 
 
     private String introduction_text;
 
-    public DiscussionTopic(long origin_proposer_id,String writer_email, String topic_title,String subject_title,LocalDateTime deadline,String introduction_text) {
+    public DiscussionTopic(long origin_proposer_id,String writer_email, String topic_title,Content content,LocalDateTime deadline,String introduction_text) {
         this.origin_proposer_id = origin_proposer_id;
         this.writer_email=writer_email;
         this.topic_title = topic_title;
-        this.subject_title=subject_title;
+        this.content=content;
         this.deadline=deadline;
         this.introduction_text=introduction_text;
 

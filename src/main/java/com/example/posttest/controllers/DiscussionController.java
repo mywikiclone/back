@@ -3,6 +3,7 @@ package com.example.posttest.controllers;
 import com.example.posttest.dtos.DiscussionCommentDtos;
 import com.example.posttest.dtos.DiscussionTopicDto;
 import com.example.posttest.dtos.TopicDto;
+import com.example.posttest.dtos.UserSessionTot;
 import com.example.posttest.entitiy.DiscussionComment;
 import com.example.posttest.entitiy.DiscussionTopic;
 import com.example.posttest.etc.ApiResponse;
@@ -45,11 +46,11 @@ public class DiscussionController {
     private  Long expiration;
 
     @PostMapping("/topicsave")
-    public ResponseEntity<ApiResponse<DiscussionTopicDto>> savetopic(@LoginUser Long member_id, @RequestBody TopicDto topicDto/*, @CheckNewToken String newtoken*/){
+    public ResponseEntity<ApiResponse<DiscussionTopicDto>> savetopic(@LoginUser UserSessionTot userSessionTot, @RequestBody TopicDto topicDto/*, @CheckNewToken String newtoken*/){
 
         //return ResponseEntity.ok(discussionService.savetopic(topicDto,member_id));
 
-        return discussionService.savetopic(topicDto,member_id);
+        return discussionService.savetopic(topicDto,userSessionTot);
 
        /* long memberid=optionalnumscheck(member_id,newtoken);
         log.info("memberid:{}",memberid);
@@ -57,50 +58,14 @@ public class DiscussionController {
         return return_ans_method(discussionService.savetopic(topicDto,memberid),newtoken);*/
 
     }
-    /*@PostMapping("/savecomment/{topic_id}/{date}")
-    public ResponseEntity<ApiResponse<List<DiscussionCommentDtos>>> savecomment(@LoginUser Long member_id, @RequestBody DiscussionCommentDtos dtos,@CheckNewToken String newtoken,@PathVariable("topic_id")Long topic_id,@PathVariable("date") String date){
-
-        date= URLDecoder.decode(date, StandardCharsets.UTF_8);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
-
-        if(26l>date.length()){
-            log.info("길이가안맞음:{}",date);
-            Long nums=26l-date.length();
-            log.info("nums:{}",nums);
-            for(int x=0;nums>x;x++){
-
-                date+="0";//0넣어주면 아래에서 파싱할떄 사라지내,,?
-                log.info("data:{}",date);
-            }
-
-
-            log.info("길이수정:{}",date);
-        }
-
-        LocalDateTime dates=LocalDateTime.parse(date,formatter);
-        if(discussionService.save_discussion_comment(dtos,member_id)){
-
-
-            return return_ans_method(discussionService.get_discussion_comments(dtos.getTopic_id(),dates),newtoken);
-
-        }
-        return return_ans_method(ApiResponse.fail(ErrorMsgandCode.Failupdate.getMsg()),newtoken);
-
-
-
-        //return return_ans_method(discussionService.save_discussion_comment(dtos,1L),newtoken);
-
-
-
-    }*/
 
 
     @PostMapping("/savecomment")
-    public ResponseEntity<ApiResponse<DiscussionCommentDtos>> savecomment2(@LoginUser Long member_id, @RequestBody DiscussionCommentDtos dtos/*,@CheckNewToken String newtoken*/){
+    public ResponseEntity<ApiResponse<DiscussionCommentDtos>> savecomment2(@LoginUser UserSessionTot userSessionTot, @RequestBody DiscussionCommentDtos dtos/*,@CheckNewToken String newtoken*/){
 
 
 
-        return discussionService.save_discussion_comment2(dtos,member_id);
+        return discussionService.save_discussion_comment2(dtos,userSessionTot);
 
         /*long memberid=optionalnumscheck(member_id,newtoken);
         return return_ans_method(discussionService.save_discussion_comment2(dtos,memberid),newtoken);*/
@@ -127,12 +92,6 @@ public class DiscussionController {
     }
 
 
-    /*@GetMapping("/getcomments/{topic_id}/{page_num}")
-    public ResponseEntity<ApiResponse<List<DiscussionCommentDtos>>> getcomments(@PathVariable("topic_id") Long topic_id,@PathVariable("page_num")int page_num){
-
-
-        return discussionService.get_discussion_comments(topic_id,page_num);
-    }*/
 
     @GetMapping("/getcomments/{topic_id}")
     public ResponseEntity<ApiResponse<List<DiscussionCommentDtos>>> getcomments2(@PathVariable("topic_id") Long topic_id){

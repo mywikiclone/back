@@ -2,9 +2,11 @@ package com.example.posttest.etc.logininterceptors;
 
 import com.example.posttest.Exceptions.CsrfError;
 import com.example.posttest.Exceptions.ReLoginError;
-import com.example.posttest.etc.JwtToken;
-import com.example.posttest.etc.JwtUtil;
+import com.example.posttest.dtos.UserSession;
+import com.example.posttest.dtos.UserSessionTot;
+import com.example.posttest.etc.*;
 import io.jsonwebtoken.ExpiredJwtException;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,15 +32,15 @@ import java.util.concurrent.TimeUnit;
 public class LoginInterceptor implements HandlerInterceptor {
 
 
-    private final JwtUtil jwtUtil;
-    private final RedisTemplate<String,String> redisTemplate;
+
+    private final CookieRedisSession cookieRedisSession;
     @Value("${spring.jwt.expiration}")
     private  Long expiration;
 
 
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
 
 
 
@@ -59,18 +62,20 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
 
 
-        HttpSession httpSession= request.getSession(false);
+        UserSessionTot userSessionTot =cookieRedisSession.getusersessiontot(request);
+        UserSession userSession=userSessionTot.getUserSession();
+       // HttpSession httpSession= request.getSession(false);
 
 
-        if(httpSession==null){
+        if(userSession==null){
 
             throw new ReLoginError();
 
         }
 
         String token=request.getHeader("Csrf_check");
-        String csrf=(String) httpSession.getAttribute("csrf");
-        log.info("csrf:{} {}  {}",csrf,token,csrf.equals(token));
+        //String csrf=(String) httpSession.getAttribute("csrf");
+        String csrf=userSession.getCrsf();
         if(csrf.equals(token)){
 
 
@@ -79,7 +84,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         else{
 
-            httpSession.invalidate();
+            cookieRedisSession.delete_user_session_tot(userSessionTot);
 
             throw new CsrfError();
         }
@@ -141,31 +146,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         return Optional.empty();
     }
 
-    private Long check_refresh_token_valid(HttpServletRequest req){
-        Cookie[] cookies=req.getCookies();
-        if(cookies!=null){
-        Optional<Cookie> cookie= Arrays.stream(cookies).filter(x->"back_refresh_token".equals(x.getName()))
-                .findFirst();
 
-        Optional<String> number=Optional.ofNullable((String)redisTemplate.opsForValue().get(cookie.get().getValue()));
-        if(cookie.isPresent()&&number.isPresent()) {
-
-
-
-                return Long.parseLong(number.get());
-
-
-
-
-        }
-        else {
-            throw new ReLoginError();
-        }
-        }
-        else {
-            throw new ReLoginError();
-        }
-    }
 }
 
 

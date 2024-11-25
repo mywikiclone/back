@@ -18,6 +18,11 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     public Optional<Member> findmember_beforeassign(@Param("email") String email);
 
 
+    @Modifying(clearAutomatically = true)
+    @Query("update Member m set m.email=:name where m.id=:id")
+    public int fixmember(@Param("id") Long id,@Param("name") String name);
+
+
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Member m SET m.grade = :grade WHERE m.email = :email")

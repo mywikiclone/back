@@ -5,6 +5,7 @@ import com.example.posttest.Exceptions.*;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtUtil;
+import com.example.posttest.service.EmailService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ExceptionController {
 
     private final JwtUtil jwtUtil;
-
+    private final EmailService emailService;
     @ExceptionHandler({CsrfError.class})
     public ResponseEntity<ApiResponse<String>> csrferrors(Exception ex){
         log.info("에러종류:{}",ex.getClass());
@@ -75,8 +76,11 @@ public class ExceptionController {
 
 
     @ExceptionHandler(AccessExceedError.class)
-    public ResponseEntity<ApiResponse<String>> accessserror(Exception ex){
+    public ResponseEntity<ApiResponse<String>> accessserror(AccessExceedError ex){
         log.info("에러종류:{}",ex.getClass());
+        String email=ex.getEmail();
+        emailService.create_auth_for_login(email);
+
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_Access_Excced_Error.getMsg()),HttpStatus.OK);
 
     }

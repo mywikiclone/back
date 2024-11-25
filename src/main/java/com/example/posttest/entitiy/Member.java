@@ -18,8 +18,10 @@ public class Member extends Times{
 
 
 
+    @Version
+    private Long version;
 
-    @Column
+
     private String email;
 
     @Column
@@ -27,17 +29,18 @@ public class Member extends Times{
 
 
 
-    @Enumerated(EnumType.STRING)
-    private UserAdmin grade;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    private UserAdmins grade;
 
 
-    public Member(String email, String password,UserAdmin grade) {
+    public Member(String email, String password,UserAdmins grade) {
         this.email = email;
         this.password = password;
         this.grade = grade;
     }
 
-    public Member(Long member_id, String email, String password,UserAdmin grade) {
+    public Member(Long member_id, String email, String password,UserAdmins grade) {
         this.member_id = member_id;
         this.email = email;
         this.password = password;

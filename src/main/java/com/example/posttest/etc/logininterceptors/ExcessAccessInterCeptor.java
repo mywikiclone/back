@@ -1,7 +1,9 @@
 package com.example.posttest.etc.logininterceptors;
 
 import com.example.posttest.Exceptions.AccessExceedError;
-import com.example.posttest.Exceptions.EtcError;
+
+import com.example.posttest.dtos.MemberDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +13,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.sql.Time;
+import java.io.BufferedReader;
 import java.util.concurrent.TimeUnit;
 
 
@@ -21,16 +23,31 @@ public class ExcessAccessInterCeptor implements HandlerInterceptor {
 
 
 
+
     private final RedisTemplate<String,String> redisTemplate;
+    private final ObjectMapper objectMapper;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
+
+        /*StringBuilder sb = new StringBuilder();
+        String line;
+        try (BufferedReader reader = request.getReader()) {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+
+        // 2. Gson 객체를 사용하여 JSON을 Java 객체로 변환
+        String jsonString = sb.toString();*/
+
         String ip=request.getRemoteAddr();
 
         ValueOperations<String,String> valueOperations =redisTemplate.opsForValue();
         String access_log=valueOperations.get(ip);
         Long ttl=redisTemplate.getExpire(ip);
-        log.info("accecc_check:{}",access_log);
-        log.info("check:{}",access_log==null);
+
         if(access_log==null){
             log.info("접속기록없음");
 
@@ -42,7 +59,7 @@ public class ExcessAccessInterCeptor implements HandlerInterceptor {
         if(Long.parseLong( access_log)>=5L){
 
             valueOperations.set(ip,String.valueOf(5L),30L,TimeUnit.SECONDS);
-            throw new AccessExceedError();
+            throw new AccessExceedError("zzz","zzz");
         }
         if(ttl>0L) {
 
