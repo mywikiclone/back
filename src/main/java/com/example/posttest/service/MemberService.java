@@ -191,15 +191,24 @@ public class MemberService {
 
 
         if(BCrypt.checkpw(memberDto.getPassword(), member.get().getPassword())){
-            if(!member.get().getAccess_ip().equals(ip)){
-                log.info("ip값이다르내?");
-                Member member2=member.get();
+
+            Member member2 = member.get();
+            if(member.get().getAccess_ip()==null) {
+
+
+                member2.setAccess_ip(ip);
+                memberRepository.save(member2);
+            }
+
+            if(member.get().getAccess_ip()!=null&&member.get().getAccess_ip().equals(ip)){
+
                 member2.setAccess_ip(ip);
                 webSocketController.SendingAnotherEnvLoginMsg(memberDto.getEmail());
                 memberRepository.save(member2);
 
-
             }
+
+
             opsforhash.delete("try_login",memberDto.getEmail());
             String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
             return  s;
