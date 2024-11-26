@@ -34,6 +34,11 @@ public class Member extends Times{
     private UserAdmins grade;
 
 
+
+
+    private String access_ip;
+
+
     public Member(String email, String password,UserAdmins grade) {
         this.email = email;
         this.password = password;

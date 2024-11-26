@@ -2,6 +2,7 @@ package com.example.posttest.service;
 
 
 import com.example.posttest.Exceptions.*;
+import com.example.posttest.controllers.WebSocketController;
 import com.example.posttest.dtos.MemberDto;
 import com.example.posttest.dtos.UserSession;
 import com.example.posttest.dtos.UserSessionTot;
@@ -50,6 +51,9 @@ public class MemberService {
 
 
     private final UserAdminRepo userAdminRepo;
+
+
+    private final WebSocketController webSocketController;
 
 
     public ResponseEntity<ApiResponse<String>> memberassign(MemberDto memberDto,HttpServletRequest req){
@@ -152,8 +156,8 @@ public class MemberService {
 
     }
 
-    @Transactional(readOnly = true)
-    public String [] memberlogin(MemberDto memberDto) {
+    @Transactional
+    public String [] memberlogin(MemberDto memberDto,String ip) {
 
         Optional<Member> member = memberRepository.findmember_beforeassign(memberDto.getEmail());
 
@@ -187,14 +191,18 @@ public class MemberService {
 
 
         if(BCrypt.checkpw(memberDto.getPassword(), member.get().getPassword())){
+            if(!member.get().getAccess_ip().equals(ip)){
+                log.info("ip값이다르내?");
+                Member member2=member.get();
+                member2.setAccess_ip(ip);
+                webSocketController.SendingAnotherEnvLoginMsg(memberDto.getEmail());
+                memberRepository.save(member2);
 
 
-         opsforhash.delete("try_login",memberDto.getEmail());
-
-        String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
-
-
-        return  s;
+            }
+            opsforhash.delete("try_login",memberDto.getEmail());
+            String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
+            return  s;
 
 
 

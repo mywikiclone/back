@@ -62,7 +62,7 @@ public class MemberControllers {
         log.info("request ip:{}",req.getRemoteAddr());
         log.info("request object:{}",req);
         log.info("request header2:{}",req.getHeader("X-Forwarded-For"));
-        String [] strs= memberService.memberlogin(memberDTO);
+        String [] strs= memberService.memberlogin(memberDTO,req.getHeader("X-Forwarded-For"));
 
 
         ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
