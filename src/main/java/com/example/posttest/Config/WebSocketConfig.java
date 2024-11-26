@@ -41,7 +41,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 //엔드포인트를 말한다.
 
 
-                .setAllowedOrigins("http://localhost:3000")//처음에 http로 진행되는 핸드셰이킹 과정에서만 성립함.
+                .setAllowedOrigins("http://localhost:3000","https://mywikifront.mywikiback.shop")//처음에 http로 진행되는 핸드셰이킹 과정에서만 성립함.
 
                 //이건 핸드셰이킹 과정 즉 http통신과정에 작용하는 인터셉터
                 //참고ㅓ로 websocket연결 즉 핸드셰이킹 이후에는 http통신이아니므로 헤더 혹은 쿠키첨부ㅏ 불가능해진다.
