@@ -77,9 +77,9 @@ public class MemberControllers {
         ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
                 .secure(true)
                 .httpOnly(true)
-                .sameSite("none")
+                .sameSite("strict")
                 .maxAge(1800)
-                .domain("localhost")
+                .domain(".mywikiback.shop")
                 .path("/")
                 .build();
 
