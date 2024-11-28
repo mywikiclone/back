@@ -19,7 +19,7 @@ public interface ChangeLongRepo extends JpaRepository<ChangeLog,Long> {
     public Page<ChangeLogDto> getchangelogs(@Param("id") Long id, Pageable pageable);
 
 
-    @Query("select new com.example.posttest.dtos.ChangeLogListDto(c.Log_Id,c.content.title,c.member.email,c.Create_Time,c.content.content_id) from ChangeLog c order by c.Create_Time asc ")
+    @Query("select new com.example.posttest.dtos.ChangeLogListDto(c.Log_Id,c.content.title,c.member.email,c.Create_Time,c.content.content_id) from ChangeLog c order by c.Create_Time desc ")
     public Page<ChangeLogListDto> getchangelogs(Pageable pageable);
 
 

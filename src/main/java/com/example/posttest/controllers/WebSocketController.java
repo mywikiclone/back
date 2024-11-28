@@ -23,21 +23,20 @@ public class WebSocketController {
     private final  SimpMessagingTemplate messagingTemplate;
     @MessageMapping("/adminchatroom")
     @SendTo("/topic/adminchatroom")
-    public UserMessage sendingmsg(UserMessage userMessage){
+    public UserMessage sendingmsg(UserMessage userMessage) {
 
 
-
-
-
-
-            return userMessage;
+        return userMessage;
 
     }
 
 
     public void SendingAnotherEnvLoginMsg(String username) {
+        log.info("다른ip로그인체크");
         String destination = "/topic/" + username;
-        messagingTemplate.convertAndSend(destination,"다른 환경에서의 로그인 발생");
+
+        UserMessage userMessage=new UserMessage("ME","ADSADSADSAD");
+        messagingTemplate.convertAndSend(destination,userMessage);
     }
 
 

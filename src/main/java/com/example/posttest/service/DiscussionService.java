@@ -1,7 +1,6 @@
 package com.example.posttest.service;
 
 
-import com.example.posttest.Exceptions.CantFindDataError;
 import com.example.posttest.Exceptions.CantFindError;
 import com.example.posttest.Exceptions.EtcError;
 import com.example.posttest.dtos.DiscussionCommentDtos;
@@ -21,8 +20,6 @@ import com.example.posttest.repository.contentrepositories.ContentRepository;
 import com.example.posttest.repository.memrepo.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.loader.LoaderLogging;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,10 +28,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,16 +64,16 @@ public class DiscussionService {
 
         if(content.isPresent()){
 
-        DiscussionTopic discussionTopic=new DiscussionTopic(member_id,member.get().getEmail(),topicDto.getTopic_title(),content.get(),deadline,topicDto.getIntroduction_text());
-        discussionTopic.setCreate_Time(now);
-        DiscussionTopic discussionTopic1=disscussionRepository.save(discussionTopic);
-        DiscussionTopicDto discussionTopicDto=new DiscussionTopicDto(member.get().getEmail(),topicDto.getTopic_title(),content.get().getTitle(),deadline,topicDto.getIntroduction_text(),discussionTopic1.getTopic_id());
+            DiscussionTopic discussionTopic=new DiscussionTopic(member_id,member.get().getEmail(),topicDto.getTopic_title(),content.get(),deadline,topicDto.getIntroduction_text());
+            discussionTopic.setCreate_Time(now);
+            DiscussionTopic discussionTopic1=disscussionRepository.save(discussionTopic);
+            DiscussionTopicDto discussionTopicDto=new DiscussionTopicDto(member.get().getEmail(),topicDto.getTopic_title(),content.get().getTitle(),deadline,topicDto.getIntroduction_text(),discussionTopic1.getTopic_id());
 
 
             HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"extend");
 
 
-        return new ResponseEntity(ApiResponse.success(discussionTopicDto, ErrorMsgandCode.Successupdate.getMsg()),headers,HttpStatus.OK);
+            return new ResponseEntity(ApiResponse.success(discussionTopicDto, ErrorMsgandCode.Successupdate.getMsg()),headers,HttpStatus.OK);
 
         }
         throw new CantFindError();
@@ -99,7 +96,10 @@ public class DiscussionService {
         //페이지에 해당되는값이없다면 0을 돌려줌.
        if(list.isEmpty()){
 
-           throw new CantFindError();
+            List<TopicDto> list2=new ArrayList<>();
+
+           return ResponseEntity.ok(ApiResponse.success(list2,"마지막"));
+           //throw new CantFindError();
           // return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
        }
 
@@ -149,7 +149,14 @@ public class DiscussionService {
 
         if(lists.isEmpty()){
 
-            throw new CantFindError();
+
+
+            List<DiscussionCommentDtos> list=new ArrayList<>();
+
+
+
+            return ResponseEntity.ok(ApiResponse.success(list,"마지막"));
+            //throw new CantFindError();
 
 
 
@@ -171,7 +178,7 @@ public class DiscussionService {
                 return ResponseEntity.ok(ApiResponse.success(new DiscussionTopicDto(discussionTopic.get().getWriter_email(),discussionTopic.get().getTopic_title(),discussionTopic.get().getContent().getTitle(),discussionTopic.get().getDeadline(),discussionTopic.get().getIntroduction_text()),ErrorMsgandCode.Successfind.getMsg()));
             }
 
-            throw new CantFindDataError();
+            throw new CantFindError();
 
 
 

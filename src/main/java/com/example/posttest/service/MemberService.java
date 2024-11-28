@@ -121,6 +121,9 @@ public class MemberService {
         UserSession userSession=userSessionTot.getUserSession();
 
 
+
+        webSocketController.SendingAnotherEnvLoginMsg("dong.3058@daum.net");
+
         Long member_id=(Long) userSession.getMember_id();
 
         Optional<Member> member=memberRepository.findById(member_id);
@@ -192,22 +195,22 @@ public class MemberService {
 
         if(BCrypt.checkpw(memberDto.getPassword(), member.get().getPassword())){
 
-            Member member2 = member.get();
-            if(member.get().getAccess_ip()==null) {
+            webSocketController.SendingAnotherEnvLoginMsg(memberDto.getEmail());
+            if(member.get().getAccess_ip()!=null) {
+                if(!ip.equals(member.get().getAccess_ip())){
 
 
-                member2.setAccess_ip(ip);
-                memberRepository.save(member2);
+                    opsforhash.put("try_login",memberDto.getEmail(),String.valueOf(5L));
+                    throw new AccessExceedError("에러발생",memberDto.getEmail());
+                }
             }
-
-            if(member.get().getAccess_ip()!=null&&member.get().getAccess_ip().equals(ip)){
-
+            else{
+                Member member2 = member.get();
                 member2.setAccess_ip(ip);
-                webSocketController.SendingAnotherEnvLoginMsg(memberDto.getEmail());
+
                 memberRepository.save(member2);
 
             }
-
 
             opsforhash.delete("try_login",memberDto.getEmail());
             String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
@@ -220,16 +223,14 @@ public class MemberService {
 
 
 
-
-
         throw new UnableToFindAccount();
 
 
 
     }
 
-    @Transactional(readOnly = true)
-    public String [] membersecurelogin(MemberDto memberDto) {
+    @Transactional
+    public String [] membersecurelogin(MemberDto memberDto,String ip) {
 
         Optional<Member> member = memberRepository.findmember_beforeassign(memberDto.getEmail());
         log.info("email:{} {}",memberDto.getEmail(),memberDto.getPassword());
@@ -242,7 +243,9 @@ public class MemberService {
 
             redisTemplate.delete(memberDto.getEmail());
             redisTemplate.opsForHash().delete("try_login",memberDto.getEmail());
-
+            Member member2 = member.get();
+            member2.setAccess_ip(ip);
+            memberRepository.save(member2);
             String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
 
 

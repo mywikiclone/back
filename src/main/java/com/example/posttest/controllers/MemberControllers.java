@@ -30,6 +30,9 @@ public class MemberControllers {
 
     private final JwtUtil jwtUtil;
 
+
+    private final WebSocketController webSocketController;
+
     @Value("${spring.jwt.expiration}")
     private  Long expiration;
 
@@ -55,7 +58,13 @@ public class MemberControllers {
 
     }
 
+    @GetMapping("/logintest")
+    public ResponseEntity<ApiResponse<String>> testinglogin(){
 
+        webSocketController.SendingAnotherEnvLoginMsg("dong.3058@daum.net");
+        return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
+
+    }
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO,HttpServletRequest req){
 
@@ -68,9 +77,9 @@ public class MemberControllers {
         ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
                 .secure(true)
                 .httpOnly(true)
-                .sameSite("strict")
+                .sameSite("none")
                 .maxAge(1800)
-                .domain(".mywikiback.shop")
+                .domain("localhost")
                 .path("/")
                 .build();
 
@@ -104,15 +113,16 @@ public class MemberControllers {
 
 
     @PostMapping("/securelogin")
-    public ResponseEntity<ApiResponse<String>> securelogin(@RequestBody MemberDto memberDTO){
-        String [] strs= memberService.membersecurelogin(memberDTO);
+    public ResponseEntity<ApiResponse<String>> securelogin(@RequestBody MemberDto memberDTO,HttpServletRequest req){
+
+        String [] strs= memberService.membersecurelogin(memberDTO,req.getHeader("X-Forwarded-For"));
 
         ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
                 .secure(true)
                 .httpOnly(true)
-                .sameSite("none")
+                .sameSite("strict")
                 .maxAge(1800)
-                .domain("localhost")
+                .domain(".mywikiback.shop")
                 .path("/")
                 .build();
 

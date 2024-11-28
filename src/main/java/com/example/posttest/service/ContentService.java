@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
 import org.apache.tika.Tika;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.cglib.core.Local;
 import org.springframework.core.io.Resource;
@@ -38,8 +39,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -64,7 +67,8 @@ public class ContentService {
 
         Tika tiKa=new Tika();
 
-        try {
+
+        try(InputStream inputStream=file.getInputStream()){
             if(!TxtFilter.file_endname_filter(file.getOriginalFilename())){
                 throw new CantFindError();
 
@@ -84,7 +88,7 @@ public class ContentService {
 
             if(destination.exists()){
 
-               throw new EtcError();
+                throw new EtcError();
 
             }
 
@@ -97,8 +101,7 @@ public class ContentService {
                 throw new EtcError();
             }
 
-
-            String mimetype=tiKa.detect(file.getInputStream());
+            String mimetype=tiKa.detect(inputStream);
 
             if(mimetype.equals("image/jpg")||mimetype.equals("image/png")||mimetype.equals("image/gif")) {
 
@@ -113,19 +116,16 @@ public class ContentService {
             throw new EtcError();
 
         }
-        catch(EtcError e){
+        catch(Exception e){
 
 
             throw new EtcError();
         }
 
-        catch (Exception e){
 
 
-            log.info("e:{}",e.getMessage());
 
-            throw new CantFindError();
-        }
+
     }
 
 
@@ -171,7 +171,7 @@ public class ContentService {
 
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity<ApiResponse<ContentDto>> ContentSave(ContentDto contentDto, UserSessionTot userSessionTot){
-
+            LocalDateTime now=LocalDateTime.now();
             long member_id=userSessionTot.getUserSession().getMember_id();
 
 
@@ -187,13 +187,15 @@ public class ContentService {
 
                 Content content = new Content(member.get(), contentDto.getTitle(), lobcontent, contentAdmin);
 
-                content.setCreate_Time(LocalDateTime.now());
-                content.setUpdate_Time(LocalDateTime.now());
+                content.setCreate_Time(now);
+                content.setUpdate_Time(now);
 
                 Content content1 = contentRepository.save(content);
 
 
                 ChangeLog changeLog=new ChangeLog(content,lobcontent,member.get());
+
+                changeLog.setCreate_Time(now);
                 changeLongRepo.save(changeLog);
 
                 HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"extend");
@@ -213,7 +215,6 @@ public class ContentService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ResponseEntity<ApiResponse<String>> UpdateContent(UserSessionTot userSessionTot,ContentDto contentDto){
 
-            log.info("update");
             long member_id=userSessionTot.getUserSession().getMember_id();;
             Optional<Content> content_opt=contentRepository.findbyidwithforupdate(contentDto.getContent_id());
 
@@ -240,18 +241,15 @@ public class ContentService {
                 }
 
 
-                throw new CantFindError();
+                throw new AdminError();
 
             }
 
-            else{
-
-                throw new CantFindDataError();
-            }
+            throw new CantFindError();
 
 
 
-            //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
 
     }
 
@@ -284,7 +282,7 @@ public class ContentService {
 
         if(content.isEmpty()){
 
-            throw new CantFindDataError();
+            throw new CantFindError();
             //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
         }
         saveRealTime(content.get());
@@ -302,7 +300,7 @@ public class ContentService {
             return ResponseEntity.ok(ApiResponse.success(new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name()), ErrorMsgandCode.Successfind.getMsg()));
         }
 
-        throw new CantFindDataError();
+        throw new CantFindError();
         //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
     }
 
@@ -312,7 +310,7 @@ public class ContentService {
 
         if(content.isEmpty()){
 
-            throw new CantFindDataError();
+            throw new CantFindError();
             //return ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg());
         }
         saveRealTime(content.get());
@@ -329,8 +327,10 @@ public class ContentService {
         Pageable page=PageRequest.of(page_num,12);
         Page<ChangeLogListDto> changeLogs=changeLongRepo.getchangelogs(page);
         if(changeLogs.isEmpty()){
-            throw new CantFindError();
-           // return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+           // throw new CantFindError();
+            List<ChangeLogListDto> list=new ArrayList<>();
+            return ResponseEntity.ok(ApiResponse.success(list,"마지막 페이지"));
+            //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
         }
 
         if(changeLogs.isLast()){
@@ -353,8 +353,10 @@ public class ContentService {
          log.info("최대 페이징갯수:{}",changeLogs.getTotalPages());
          if(changeLogs.isEmpty()){
 
+            List<ChangeLogDto> list=new ArrayList<>();
 
-             throw new CantFindError();
+             return ResponseEntity.ok(ApiResponse.success(list,"마지막 페이지"));
+            // throw new CantFindError();
              //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
          }
 
@@ -386,14 +388,16 @@ public class ContentService {
 
         if(changeLog.isPresent()){
         ChangeLog c=changeLog.get();
-        ContentDto contentDto=new ContentDto(c.getMember().getMember_id(),c.getContent().getTitle(),c.getLobContent().getContent(),c.getUpdate_Time());
+        Content content=c.getContent();
+        ContentDto contentDto=new ContentDto(content.getContent_id(),c.getContent().getTitle(),c.getLobContent().getContent(),c.getMember().getEmail(),c.getUpdate_Time(),content.getGrade().getGrade().name());
+
 
 
         return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));}
         //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
 
 
-        throw new CantFindDataError();
+        throw new CantFindError();
 
     }
 

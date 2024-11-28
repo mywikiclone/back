@@ -33,13 +33,6 @@ public class ExceptionController {
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_Csrf_Auth.getMsg()), HttpStatus.OK);
     }
 
-    @ExceptionHandler({MalformedJwtException.class,UnsupportedJwtException.class})
-    public ResponseEntity<ApiResponse<String>> jwterrors(Exception ex){
-        log.info("에러종류:{}",ex.getClass());
-
-        return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.FailJwt.getMsg()), HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(ExistIdError.class)
     public ResponseEntity<ApiResponse<String>> idexist(Exception ex){
         log.info("에러종류:{}",ex.getClass());
@@ -83,11 +76,6 @@ public class ExceptionController {
 
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_Access_Excced_Error.getMsg()),HttpStatus.OK);
 
-    }
-    @ExceptionHandler(CantFindDataError.class)
-    public ResponseEntity<ApiResponse<String>> CantFindDataError(Exception ex){
-        log.info("에러종류:{}",ex.getClass());
-        return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_Find_Data.getMsg()),HttpStatus.OK);
     }
 
 

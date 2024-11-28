@@ -48,14 +48,11 @@ public class DiscussionController {
     @PostMapping("/topicsave")
     public ResponseEntity<ApiResponse<DiscussionTopicDto>> savetopic(@LoginUser UserSessionTot userSessionTot, @RequestBody TopicDto topicDto/*, @CheckNewToken String newtoken*/){
 
-        //return ResponseEntity.ok(discussionService.savetopic(topicDto,member_id));
+
 
         return discussionService.savetopic(topicDto,userSessionTot);
 
-       /* long memberid=optionalnumscheck(member_id,newtoken);
-        log.info("memberid:{}",memberid);
 
-        return return_ans_method(discussionService.savetopic(topicDto,memberid),newtoken);*/
 
     }
 
