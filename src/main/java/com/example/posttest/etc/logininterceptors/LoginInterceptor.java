@@ -72,8 +72,8 @@ public class LoginInterceptor implements HandlerInterceptor {
             throw new ReLoginError();
 
         }
-
-        String token=request.getHeader("Csrf_check");
+        log.info("token:{}",request.getHeader("csrf_check"));
+        String token=request.getHeader("csrf_check");//request.getHeader("Csrf_check");
         //String csrf=(String) httpSession.getAttribute("csrf");
         String csrf=userSession.getCrsf();
         log.info("token:{}",token);
