@@ -76,6 +76,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         String token=request.getHeader("Csrf_check");
         //String csrf=(String) httpSession.getAttribute("csrf");
         String csrf=userSession.getCrsf();
+        log.info("token:{}",token);
+        log.info("csrf:{}",csrf);
         if(csrf.equals(token)){
 
 
@@ -84,7 +86,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         else{
 
-            cookieRedisSession.delete_user_session_tot(userSessionTot);
+            //cookieRedisSession.delete_user_session_tot(userSessionTot);
 
             throw new CsrfError();
         }
