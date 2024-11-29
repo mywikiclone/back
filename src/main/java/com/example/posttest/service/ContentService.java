@@ -110,7 +110,7 @@ public class ContentService {
                 log.info("????");
 
                 file.transferTo(destination);
-
+                log.info("여기까지못오니설마?");
 
                 return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successfind.getMsg()));
             }
@@ -120,7 +120,7 @@ public class ContentService {
 
         }
         catch(Exception e){
-
+            log.info("e:{}",e.getMessage());
 
             throw new EtcError();
         }
