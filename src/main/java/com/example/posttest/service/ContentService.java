@@ -104,8 +104,10 @@ public class ContentService {
 
             String mimetype=tiKa.detect(inputStream);
             log.info("mimetype:{}",mimetype);
+            log.info("equal:{}",mimetype.equals("image/png"));
             if(mimetype.equals("image/jpg")||mimetype.equals("image/png")||mimetype.equals("image/gif")) {
 
+                log.info("????");
 
                 file.transferTo(destination);
 
