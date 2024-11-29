@@ -121,7 +121,7 @@ public class MemberControllers {
                 .httpOnly(true)
                 .sameSite("strict")
                 .maxAge(1800)
-                .domain(".mywikiback.shop")
+                .domain("mywikiback.shop")
                 .path("/")
                 .build();
 
@@ -140,8 +140,12 @@ public class MemberControllers {
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> Logout(HttpServletRequest req){
 
-
         return memberService.logout(req);
+
+
+
+
+
 
 
 

@@ -169,8 +169,8 @@ public class CookieRedisSession {
                 .secure(true)
                 .httpOnly(true)
                 .maxAge(key=="extend" ? 1800 : 0)
-                .domain(".localhost")
-                .sameSite("none")
+                .domain(".mywikiback.hsop")
+                .sameSite("strict")
                 .path("/")
                 .build();
         log.info("cookie:{}",cookie);
