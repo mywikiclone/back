@@ -19,6 +19,7 @@ import org.apache.tika.Tika;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.cglib.core.Local;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
@@ -79,9 +80,9 @@ public class ContentService {
             String filename = TxtFilter.file_name_filter(file.getOriginalFilename());
 
 //            log.info("syspath:{}",System.getProperty("user.dir"));
-            //String filepath="/home/ec2-user/back/uploads/" + filename;//ec2사용시 이렇게따로 분리해서만들어댜될듯?
+            String filepath="/home/ec2-user/back/uploads/" + filename;//ec2사용시 이렇게따로 분리해서만들어댜될듯?
             //String filepath = System.getProperty("user.dir")+"/src/main/resources/uploads/" + filename;
-            String filepath="/home/ec2-user/back"+"/src/main/resources/uploads/" + filename;
+           // String filepath="/home/ec2-user/back"+"/src/main/resources/uploads/" + filename;
 
            // /tmp/tomcat.8080.14093626743833726329/work/Tomcat/localhost/ROOT/back
 
@@ -151,7 +152,8 @@ public class ContentService {
                // file_search_name=file_search_name.replaceAll("/","\\\\");
 
                // Resource resource = resourceLoader.getResource("classpath:"+file_search_name);
-                Resource resource = resourceLoader.getResource("/home/ec2-user/back"+"/src/main/resources"+file_search_name);
+                //Resource resource = resourceLoader.getResource("/home/ec2-user/back"+"/src/main/resources"+file_search_name);
+                Resource resource=new FileSystemResource("/home/ec2-user/back"+file_search_name);
                 if (!resource.exists()) {
                     continue;
 
