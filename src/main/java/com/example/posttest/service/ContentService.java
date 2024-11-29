@@ -150,8 +150,8 @@ public class ContentService {
                // file_search_name = String.format(System.getProperty("user.dir")+"/src/main/resources/uploads/%s.%s", filename, end);
                // file_search_name=file_search_name.replaceAll("/","\\\\");
 
-                Resource resource = resourceLoader.getResource("classpath:"+file_search_name);
-
+               // Resource resource = resourceLoader.getResource("classpath:"+file_search_name);
+                Resource resource = resourceLoader.getResource("/home/ec2-user/back"+"/src/main/resources"+file_search_name);
                 if (!resource.exists()) {
                     continue;
 
