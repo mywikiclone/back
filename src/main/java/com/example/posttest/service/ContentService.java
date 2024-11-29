@@ -96,13 +96,14 @@ public class ContentService {
 
             long maxSize = 2 * 1024 * 1024;
             log.info("파일크기:{}",file.getSize());
+            log.info("더크나ㅑ?:{}",file.getSize()>maxSize);
             if(file.getSize()>maxSize){
-
+                log.info("에러발생");
                 throw new EtcError();
             }
 
             String mimetype=tiKa.detect(inputStream);
-
+            log.info("mimetype:{}",mimetype);
             if(mimetype.equals("image/jpg")||mimetype.equals("image/png")||mimetype.equals("image/gif")) {
 
 
