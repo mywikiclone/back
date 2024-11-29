@@ -78,8 +78,7 @@ public class ContentService {
 
             String filename = TxtFilter.file_name_filter(file.getOriginalFilename());
 
-
-                //System.getProperty("user.dir")
+            log.info("syspath:{}",System.getProperty("user.dir"));
             String filepath = "back"+"/src/main/resources/uploads/" + filename;
 
             File destination = new File(filepath);
