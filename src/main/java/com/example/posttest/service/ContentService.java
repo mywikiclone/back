@@ -79,9 +79,9 @@ public class ContentService {
             String filename = TxtFilter.file_name_filter(file.getOriginalFilename());
 
 //            log.info("syspath:{}",System.getProperty("user.dir"));
-            String filepath="/home/ec2-user/back/uploads/" + filename;
-            //String filepath = "/home/ec2-user/back"+"/src/main/resources/uploads/" + filename;
-
+            //String filepath="/home/ec2-user/back/uploads/" + filename;//ec2사용시 이렇게따로 분리해서만들어댜될듯?
+            //String filepath = System.getProperty("user.dir")+"/src/main/resources/uploads/" + filename;
+            String filepath="/home/ec2-user/back"+"/src/main/resources/uploads/" + filename;
 
            // /tmp/tomcat.8080.14093626743833726329/work/Tomcat/localhost/ROOT/back
 
