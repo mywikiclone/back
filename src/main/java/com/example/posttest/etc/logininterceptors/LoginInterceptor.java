@@ -64,6 +64,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         UserSessionTot userSessionTot =cookieRedisSession.getusersessiontot(request);
         UserSession userSession=userSessionTot.getUserSession();
+        log.info("usesession:{}",userSession);
        // HttpSession httpSession= request.getSession(false);
 
 
@@ -76,8 +77,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
         log.info("token:{}",request.getHeader("Csrf_check"));
-        String token=request.getHeader("Csrf_check");//request.getHeader("Csrf_check");
-        //String csrf=(String) httpSession.getAttribute("csrf");
+        String token=request.getHeader("Csrf_check");
         String csrf=userSession.getCrsf();
         log.info("token:{}",token);
         log.info("csrf:{}",csrf);

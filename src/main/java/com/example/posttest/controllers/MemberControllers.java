@@ -79,7 +79,7 @@ public class MemberControllers {
                 .httpOnly(true)
                 .sameSite("strict")
                 .maxAge(1800)
-                .domain(".mywikiback.shop")
+                .domain("mywikiback.shop")
                 .path("/")
                 .build();
 
