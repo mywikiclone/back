@@ -48,7 +48,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         log.info("들어온 경로:{}",request.getRequestURI());
         log.info("request객체설명:{}",request.getHeader("Content-Type"));
         log.info("x-forwarded:{}",request.getHeader("X-Forwarded-For"));
-
+        log.info("testheader:{}",request.getHeader("Testing"));
 
 
         if(isPreflightRequest(request)){
