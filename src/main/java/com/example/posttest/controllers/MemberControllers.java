@@ -105,7 +105,6 @@ public class MemberControllers {
 
     @PostMapping("/changepassword")
     public ResponseEntity<ApiResponse<String>> changepassword(@RequestBody MemberDto memberDTO){
-
            return memberService.changepassword(memberDTO);
 
     }

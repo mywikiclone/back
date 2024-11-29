@@ -95,7 +95,7 @@ public class ContentService {
 
 
             long maxSize = 2 * 1024 * 1024;
-
+            log.info("파일크기:{}",file.getSize());
             if(file.getSize()>maxSize){
 
                 throw new EtcError();
@@ -144,7 +144,7 @@ public class ContentService {
                // file_search_name=file_search_name.replaceAll("/","\\\\");
 
                 Resource resource = resourceLoader.getResource("classpath:"+file_search_name);
-               ;
+
                 if (!resource.exists()) {
                     continue;
 
