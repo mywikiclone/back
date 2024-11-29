@@ -5,26 +5,24 @@ import com.example.posttest.Exceptions.ReLoginError;
 import com.example.posttest.dtos.UserSession;
 import com.example.posttest.dtos.UserSessionTot;
 import com.example.posttest.etc.*;
-import io.jsonwebtoken.ExpiredJwtException;
+
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 
-import java.util.ArrayList;
+
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+
 
 @RequiredArgsConstructor
 @Slf4j
@@ -49,7 +47,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         log.info("controller:{}",handler.getClass());
         log.info("들어온 경로:{}",request.getRequestURI());
         log.info("request객체설명:{}",request.getHeader("Content-Type"));
-
+        log.info("x-forwarded:{}",request.getHeader("X-Forwarded-For"));
 
 
 
@@ -77,6 +75,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
         log.info("token:{}",request.getHeader("Csrf_check"));
+        log.info("token2:{}",request.getHeader("Csrf_Check"));
         String token=request.getHeader("Csrf_check");
         String csrf=userSession.getCrsf();
         log.info("token:{}",token);

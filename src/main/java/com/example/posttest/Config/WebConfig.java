@@ -45,33 +45,6 @@ public class WebConfig implements WebMvcConfigurer {
 
 
 
-    /*@Bean
-    public WebServerFactoryCustomizer<TomcatWebServer> tomcatCustomizer() {
-        return factory -> {
-            if (factory instanceof TomcatWebServer) {
-                Tomcat tomcat = ((TomcatWebServer) factory).getTomcat();
-
-
-                tomcat.getEngine().setCookieProcessor(new LegacyCookieProcessor());
-            }
-        };
-    }*/
-
-
-
-    /*@Bean
-    public EmbeddedServletContainerCustomizer tomcatCustomizer() {
-        return container -> {
-            if (container instanceof TomcatEmbeddedServletContainerFactory) {
-                TomcatEmbeddedServletContainerFactory tomcat = (TomcatEmbeddedServletContainerFactory) container;
-                tomcat.addContextCustomizers(context -> context.setCookieProcessor(new LegacyCookieProcessor()));
-            }
-        };
-    }*/
-
-
-
-
 
 
     @Override
@@ -87,7 +60,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns("http://localhost:3000","https://mywikifront.mywikiback.shop")
                 .allowedMethods("*")
                 .allowedHeaders("*")//헤더도 이런설정이있따 ㅇㅇ;'
-                .exposedHeaders("Csrf_Check","Csrf_check")//z클라이언트가 응답을볼떄 볼수잇는 헤더지정
+                //.exposedHeaders("Csrf_Check","Csrf_check")//z클라이언트가 응답을볼떄 볼수잇는 헤더지정
                 .allowCredentials(true);
     }
 
