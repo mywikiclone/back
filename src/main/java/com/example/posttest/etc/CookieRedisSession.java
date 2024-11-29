@@ -168,8 +168,8 @@ public class CookieRedisSession {
         ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",cookie.getValue())
                 .secure(true)
                 .httpOnly(true)
-                .maxAge(key=="extend" ? 1800 : 0)
-                .domain(".mywikiback.hsop")
+                .maxAge(key.equals("extend") ? 1800 : 0)
+                .domain(".mywikiback.shop")
                 .sameSite("strict")
                 .path("/")
                 .build();

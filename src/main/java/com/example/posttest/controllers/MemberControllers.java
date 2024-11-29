@@ -145,12 +145,6 @@ public class MemberControllers {
 
 
 
-
-
-
-
-
-
       }
 
     @GetMapping("/healthycheck")
