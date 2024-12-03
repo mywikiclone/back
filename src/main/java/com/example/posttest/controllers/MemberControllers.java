@@ -153,6 +153,7 @@ public class MemberControllers {
 
     @GetMapping("/healthycheck")
     public ResponseEntity<String> healthycheck(){
+        log.info("healthycheck");
         redisTemplate.opsForValue().set("test","test",1000L, TimeUnit.SECONDS);
         return  ResponseEntity.ok("success");
     }
