@@ -1,7 +1,7 @@
 FROM openjdk:21
 ARG JAR_FILE=build/libs/*.jar
 ARG APP_LOG=/logs/application.log
-ARG ERROR_LOG=/logs/application.log
+ARG ERROR_LOG=/logs/error.log
 
 #RUN apt-get update && apt-get install -y redis-server
 
