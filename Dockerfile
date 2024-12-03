@@ -1,16 +1,21 @@
 FROM openjdk:21
 ARG JAR_FILE=build/libs/*.jar
-
-
+ARG APP_LOG=/logs/application.log
+ARG ERROR_LOG=/logs/application.log
 
 #RUN apt-get update && apt-get install -y redis-server
 
+RUN mkdir -p /logs
 
 
 COPY ${JAR_FILE} app.jar
 
 
-CMD java -jar -Dspring.profiles.active=aws /app.jar
+CMD nohup java -jar -Dspring.profiles.active=aws /app.jar> $APP_LOG 2> $ERROR_LOG &
+
+
+
+
 
 
 ENV TZ=Asia/Seoul
