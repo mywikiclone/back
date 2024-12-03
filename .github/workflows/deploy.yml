@@ -52,7 +52,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            
             ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPOSITORY }}:latest
           labels: version=${{ github.ref_name }}
 
