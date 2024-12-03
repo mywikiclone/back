@@ -35,27 +35,63 @@ jobs:
       - name: Build with Gradle     # 내려 받은 코드 빌드
         run: ./gradlew clean build -x test
 
-      - name: Configure AWS credentials # AWS 자격 설정
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Upload to AWS S3 # AWS S3 에 업로드
-        run: | # 텍스트 블록의 시작
-          aws deploy push \
-            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-            --ignore-hidden-files \
-            --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
-            --source .
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USER_NAME }}
+          password: ${{ secrets.DOCKER_USER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPOSITORY }}:${{ github.ref_name }}
+            ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPOSITORY }}:latest
+          labels: version=${{ github.ref_name }}
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/ec2-user
+            ./deploy.sh            
+            
+            
+            
+            
+            
+            
+
+      #- name: Configure AWS credentials # AWS 자격 설정
+       # uses: aws-actions/configure-aws-credentials@v4
+        #with:
+         # aws-region: ${{ env.AWS_REGION }}
+         # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+         # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      #- name: Upload to AWS S3 # AWS S3 에 업로드
+       # run: | # 텍스트 블록의 시작
+        #  aws deploy push \
+         #   --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+          #  --ignore-hidden-files \
+           # --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
+            #--source .
         # AWS CodeDeploy 를 사용하여 파일을 업로드 == aws deploy push
 
-      - name: Deploy to AWS EC2 from S3 # S3에 올린 것을 EC2로 배포하는 작업
-        run: |
-          aws deploy create-deployment \
-            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-            --deployment-config-name CodeDeployDefault.AllAtOnce \
-            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-            --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
+      # - name: Deploy to AWS EC2 from S3 # S3에 올린 것을 EC2로 배포하는 작업
+        # run: |
+         # aws deploy create-deployment \
+          #  --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+           # --deployment-config-name CodeDeployDefault.AllAtOnce \
+            #--deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+            #--s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
         # CodeDeploy 가 appspec.yml 을 실행 == aws deploy create-deployment
