@@ -11,7 +11,7 @@ RUN mkdir -p /logs
 COPY ${JAR_FILE} app.jar
 
 
-CMD  java -jar -Dspring.profiles.active=aws /app.jar> $APP_LOG 2> $ERROR_LOG &
+CMD  java -jar -Dspring.profiles.active=aws /app.jar
 
 
 #nohup java -jar -Dspring.profiles.active=aws /app.jar> $APP_LOG 2> $ERROR_LOG &
