@@ -55,6 +55,8 @@ jobs:
             ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPOSITORY }}:${{ github.ref_name }}
             ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPOSITORY }}:latest
           labels: version=${{ github.ref_name }}
+
+
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -62,8 +64,8 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /home/ec2-user
-            ./deploy.sh            
+            chmod +x /home/ec2-user/deploy.sh
+            /home/ec2-user/deploy.sh            
             
             
             
