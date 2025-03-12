@@ -17,6 +17,6 @@ public interface DisscussionRepository extends JpaRepository<DiscussionTopic,Lon
 
 
 
-    @Query("select new com.example.posttest.dtos.TopicDto(d.topic_title,d.origin_proposer_id,d.topic_id,d.content.title,d.writer_email,d.deadline) from DiscussionTopic d order by d.Create_Time asc ")
+    @Query("select new com.example.posttest.dtos.TopicDto(d.topic_title,d.member.member_id,d.topic_id,d.content.title,d.member.email,d.deadline) from DiscussionTopic d order by d.Create_Time asc ")
     public Page<TopicDto> gettopics(Pageable pageable);
 }

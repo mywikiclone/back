@@ -34,6 +34,7 @@ public class CookieRedisSession {
     public UserSessionTot getusersessiontot(HttpServletRequest req){
 
         Cookie cookie=getcookie(req);
+
         if(cookie==null){
             throw new ReLoginError();
         }
@@ -42,14 +43,14 @@ public class CookieRedisSession {
 
         UserSession userSession=getusersession(session_id);
 
-        return new UserSessionTot(session_id,userSession,cookie);
+        return new UserSessionTot(session_id,userSession);
     }
 
     private Cookie getcookie(HttpServletRequest req){
 
         Cookie[] cookies=req.getCookies();
         if(cookies!=null) {
-            Optional<Cookie> cookie = Arrays.stream(cookies).filter(x -> "JSESSIONID".equals(x.getName()))
+            Optional<Cookie> cookie = Arrays.stream(cookies).filter(x -> "JSESSIONID2".equals(x.getName()))
                     .findFirst();
 
 
@@ -68,7 +69,6 @@ public class CookieRedisSession {
     private UserSession getusersession(String session_id){
 
         try {
-            Long time = redisTemplate.getExpire(session_id);
             String user_data=(String) redisTemplate.opsForValue().get(session_id);
 
             UserSession userSession=Optional.ofNullable(user_data)
@@ -129,51 +129,61 @@ public class CookieRedisSession {
     }
 
 
-
-  public Cookie delete_user_session_tot(UserSessionTot userSessionTot){
+  public String delete_user_session_tot(UserSessionTot userSessionTot){
 
 
         redisTemplate.delete(userSessionTot.getSession_id());
 
 
-        return userSessionTot.getCookie();
+        return userSessionTot.getSession_id();
 
   }
 
 
 
-  public Cookie extend_user_session_tot(UserSessionTot userSessionTot){
+  public String extend_user_session_tot(UserSessionTot userSession){
 
 
 
-        redisTemplate.expire(userSessionTot.getSession_id(),1800L,TimeUnit.SECONDS);
+        redisTemplate.expire(userSession.getSession_id(),1800L,TimeUnit.SECONDS);
 
-        return userSessionTot.getCookie();
+        return userSession.getSession_id();
 
   }
 
 
-  public HttpHeaders makecookieinheader(UserSessionTot userSessionTot,String key){
+  public HttpHeaders makecookieinheader(UserSessionTot userSession,String key){
 
-        Cookie cookie=null;
+        String session_id="";
         if(key=="extend") {
-            cookie = extend_user_session_tot(userSessionTot);
+            session_id = extend_user_session_tot(userSession);
         }
         else{
 
-            cookie=delete_user_session_tot(userSessionTot);
+            session_id=delete_user_session_tot(userSession);
         }
         HttpHeaders headers=new HttpHeaders();
 
-        ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",cookie.getValue())
+      ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID2",session_id)
+              .secure(true)
+              .httpOnly(true)
+              .maxAge(key.equals("extend") ? 1800 : 0)
+              .domain("localhost")
+              .sameSite("none")
+              .path("/")
+              .build();
+
+
+
+        /*ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",cookie.getValue())
                 .secure(true)
                 .httpOnly(true)
                 .maxAge(key.equals("extend") ? 1800 : 0)
                 .domain(".mywikiback.shop")
                 .sameSite("strict")
                 .path("/")
-                .build();
-        log.info("cookie:{}",cookie);
+                .build();*/
+
         headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
 
 

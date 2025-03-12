@@ -2,15 +2,16 @@ package com.example.posttest.controllers;
 
 
 import com.example.posttest.dtos.MemberDto;
+import com.example.posttest.dtos.MsgDto;
+import com.example.posttest.dtos.Oauth2Dto;
+import com.example.posttest.dtos.UserSessionTot;
 import com.example.posttest.etc.*;
+import com.example.posttest.etc.annotataion.LoginUser;
 import com.example.posttest.service.MemberService;
-
-
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @Slf4j
@@ -31,24 +31,51 @@ public class MemberControllers {
 
     private final MemberService memberService;
 
-    private final JwtUtil jwtUtil;
-
-    private final RedisTemplate<String,String> redisTemplate;
-
     private final WebSocketController webSocketController;
+
+    private final RedisSubPub redisSubPub;
+
 
     @Value("${spring.jwt.expiration}")
     private  Long expiration;
 
     @PostMapping("/assign")
     public ResponseEntity<ApiResponse<String>> assign(@RequestBody MemberDto memberDTO,HttpServletRequest req){
+
         return memberService.memberassign(memberDTO,req);
 
-
-
-        //return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
     };
 
+    @PostMapping("/oauth2/login")
+    public ResponseEntity<ApiResponse<String>> oauth2login(@RequestBody Oauth2Dto oauth2Dto){
+
+        String [] strs=memberService.oauth2login(oauth2Dto);
+
+
+
+
+        ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID2",strs[0])
+                .secure(true)
+                .httpOnly(true)
+                .sameSite("none")
+                .maxAge(1800)
+                .domain("localhost")
+                .path("/")
+                .build();
+
+
+
+
+        HttpHeaders headers=new HttpHeaders();
+        headers.add("Csrf_check",strs[1]);
+        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
+        ApiResponse x= ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg());
+        log.info("-----end------");
+
+        return new ResponseEntity<>(x,headers,HttpStatus.OK);
+
+
+    }
 
 
 
@@ -60,7 +87,22 @@ public class MemberControllers {
         return memberService.memberexistcheck(memberDto);
 
 
+
     }
+
+
+    @PostMapping("/idcheckoauth2")
+    public ResponseEntity<ApiResponse<String>> check2(@RequestBody MemberDto memberDto){
+
+
+        return memberService.memberexistcheck2(memberDto);
+
+
+
+    }
+
+
+
 
     @GetMapping("/logintest")
     public ResponseEntity<ApiResponse<String>> testinglogin(){
@@ -72,18 +114,16 @@ public class MemberControllers {
     @PostMapping("/firlogin")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody MemberDto memberDTO,HttpServletRequest req){
 
-        log.info("request ip:{}",req.getRemoteAddr());
-        log.info("request object:{}",req);
-        log.info("request header2:{}",req.getHeader("X-Forwarded-For"));
+
         String [] strs= memberService.memberlogin(memberDTO,req.getHeader("X-Forwarded-For"));
 
 
-        ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID",strs[0])
+        ResponseCookie responseCookie=ResponseCookie.from("JSESSIONID2",strs[0])
                 .secure(true)
                 .httpOnly(true)
                 .sameSite("strict")
                 .maxAge(1800)
-                .domain("mywikiback.shop")
+                .domain("localhost")
                 .path("/")
                 .build();
 
@@ -103,13 +143,12 @@ public class MemberControllers {
     }
 
 
-    //레디스에 access토큰 저장, refresh 토크ㅜㄴ 저장하고 로그아웃 로직이랑
-    //토큰 재생성을 위한 refresh토큰 이용,refresh토큰 재생성 이건 내일.
+
 
 
     @PostMapping("/changepassword")
-    public ResponseEntity<ApiResponse<String>> changepassword(@RequestBody MemberDto memberDTO){
-           return memberService.changepassword(memberDTO);
+    public ResponseEntity<ApiResponse<String>> changepassword(@LoginUser UserSessionTot userSessionTot,MemberDto memberDto){
+           return memberService.changepassword(userSessionTot,memberDto);
 
     }
 
@@ -125,7 +164,7 @@ public class MemberControllers {
                 .httpOnly(true)
                 .sameSite("strict")
                 .maxAge(1800)
-                .domain("mywikiback.shop")
+                .domain("localhost")
                 .path("/")
                 .build();
 
@@ -141,6 +180,7 @@ public class MemberControllers {
 
 
 
+
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> Logout(HttpServletRequest req){
 
@@ -151,34 +191,14 @@ public class MemberControllers {
 
       }
 
-    @GetMapping("/healthycheck")
-    public ResponseEntity<String> healthycheck(){
-        log.info("healthycheck");
-        redisTemplate.opsForValue().set("test","test",1000L, TimeUnit.SECONDS);
-        return  ResponseEntity.ok("success");
-    }
+    @GetMapping("/logouttesting")
+    public void Logouttesting(HttpServletRequest req){
+
+        memberService.logouttesting(req);
 
 
 
-    public <T>ResponseEntity<ApiResponse<T>> return_ans_method(ApiResponse<T> apiResponse,String token){
-        if(token==null){
 
-            return ResponseEntity.ok(apiResponse);
-        }
-
-        ResponseCookie responseCookie=ResponseCookie.from("back_access_token",token)
-                .maxAge(expiration/1000)
-                .path("/")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain("localhost")
-                .build();
-        HttpHeaders headers=new HttpHeaders();
-
-        headers.add(HttpHeaders.SET_COOKIE,responseCookie.toString());
-
-        return new ResponseEntity<>(apiResponse,headers, HttpStatus.OK);
     }
 
 

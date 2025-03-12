@@ -6,15 +6,14 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class IpDto {
+public class Oauth2Dto {
 
 
+    private String email;
 
 
-    private String ip_addr;
+    public Oauth2Dto(String email) {
 
-
-    public IpDto(String ip_addr) {
-        this.ip_addr = ip_addr;
+        this.email = email;
     }
 }

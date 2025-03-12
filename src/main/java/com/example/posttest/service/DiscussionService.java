@@ -3,26 +3,26 @@ package com.example.posttest.service;
 
 import com.example.posttest.Exceptions.CantFindError;
 import com.example.posttest.Exceptions.EtcError;
-import com.example.posttest.dtos.DiscussionCommentDtos;
-import com.example.posttest.dtos.DiscussionTopicDto;
-import com.example.posttest.dtos.TopicDto;
-import com.example.posttest.dtos.UserSessionTot;
+import com.example.posttest.Mapper.DiscussionMapper;
+import com.example.posttest.Mapper.FeedMapper;
+import com.example.posttest.dtos.*;
 import com.example.posttest.entitiy.Content;
 import com.example.posttest.entitiy.DiscussionComment;
 import com.example.posttest.entitiy.DiscussionTopic;
 import com.example.posttest.entitiy.Member;
-import com.example.posttest.etc.ApiResponse;
-import com.example.posttest.etc.CookieRedisSession;
-import com.example.posttest.etc.ErrorMsgandCode;
+import com.example.posttest.etc.*;
 import com.example.posttest.repository.DiscussionCommentRepo;
 import com.example.posttest.repository.DisscussionRepository;
+import com.example.posttest.repository.FeedRepository;
 import com.example.posttest.repository.contentrepositories.ContentRepository;
 import com.example.posttest.repository.memrepo.MemberRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +47,11 @@ public class DiscussionService {
     private final ContentRepository contentRepository;
     private final MemberRepository memberRepository;
     private final CookieRedisSession cookieRedisSession;
-
+    private final RedisSubPub redisSubPub;
+    private final DiscussionMapper discussionMapper;
+    private final ObjectMapper objectMapper;
+    private final FeedMapper feedMapper;
+    private final FeedService feedService;
 
     @Transactional
     public ResponseEntity<ApiResponse<DiscussionTopicDto>> savetopic(TopicDto topicDto, UserSessionTot userSessionTot){
@@ -64,12 +68,12 @@ public class DiscussionService {
 
         if(content.isPresent()){
 
-            DiscussionTopic discussionTopic=new DiscussionTopic(member_id,member.get().getEmail(),topicDto.getTopic_title(),content.get(),deadline,topicDto.getIntroduction_text());
+            DiscussionTopic discussionTopic=new DiscussionTopic(member.get(),topicDto.getTopic_title(),content.get(),deadline,topicDto.getIntroduction_text());
             discussionTopic.setCreate_Time(now);
             DiscussionTopic discussionTopic1=disscussionRepository.save(discussionTopic);
             DiscussionTopicDto discussionTopicDto=new DiscussionTopicDto(member.get().getEmail(),topicDto.getTopic_title(),content.get().getTitle(),deadline,topicDto.getIntroduction_text(),discussionTopic1.getTopic_id());
 
-
+            feedService.create_feed(member_id,discussionTopic1.getTopic_id());
             HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"extend");
 
 
@@ -127,6 +131,17 @@ public class DiscussionService {
             DiscussionComment discussionComment1=discussionCommentRepo.save(discussionComment);
 
 
+            //List<Long> feed_list=discussionMapper.get_feed_list(dtos.getTopic_id(),member_id);
+
+            List<Long> feed_list=feedMapper.get_feed_list(dtos.getTopic_id(),"OK",member_id);
+            MsgDto msgDto=new MsgDto();
+            try {
+                msgDto = new MsgDto("feed_list", "1", discussionTopic.get().getTopic_id(), objectMapper.writeValueAsString(feed_list));
+            }
+            catch (Exception e){
+
+            }
+            redisSubPub.send_msg_to_msg_server(msgDto);
 
             DiscussionCommentDtos discussionCommentDtos=new DiscussionCommentDtos(dtos.getTopic_id(),member.get().getEmail(),member.get().getMember_id(),dtos.getComment_content(),discussionComment1.getCreate_Time());
 
@@ -175,7 +190,7 @@ public class DiscussionService {
 
             Optional<DiscussionTopic> discussionTopic=disscussionRepository.findById(topic_id);
             if(discussionTopic.isPresent()){
-                return ResponseEntity.ok(ApiResponse.success(new DiscussionTopicDto(discussionTopic.get().getWriter_email(),discussionTopic.get().getTopic_title(),discussionTopic.get().getContent().getTitle(),discussionTopic.get().getDeadline(),discussionTopic.get().getIntroduction_text()),ErrorMsgandCode.Successfind.getMsg()));
+                return ResponseEntity.ok(ApiResponse.success(new DiscussionTopicDto(discussionTopic.get().getMember().getEmail(),discussionTopic.get().getTopic_title(),discussionTopic.get().getContent().getTitle(),discussionTopic.get().getDeadline(),discussionTopic.get().getIntroduction_text()),ErrorMsgandCode.Successfind.getMsg()));
             }
 
             throw new CantFindError();

@@ -32,9 +32,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
     private final CookieRedisSession cookieRedisSession;
-    @Value("${spring.jwt.expiration}")
-    private  Long expiration;
-
 
 
     @Override
@@ -42,18 +39,9 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
 
-
-        log.info("===========인터셉터호출==============");
-        log.info("controller:{}",handler.getClass());
-        log.info("들어온 경로:{}",request.getRequestURI());
-        log.info("request객체설명:{}",request.getHeader("Content-Type"));
-        log.info("x-forwarded:{}",request.getHeader("X-Forwarded-For"));
-        log.info("testheader:{}",request.getHeader("Testing"));
-
-
         if(isPreflightRequest(request)){
 
-            log.info("preflightrequest입니다!!!!!!!!!!!!!!");
+
             return true;
 
 
@@ -62,8 +50,6 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         UserSessionTot userSessionTot =cookieRedisSession.getusersessiontot(request);
         UserSession userSession=userSessionTot.getUserSession();
-        log.info("usesession:{}",userSession);
-       // HttpSession httpSession= request.getSession(false);
 
 
         if(userSession==null){
@@ -74,12 +60,9 @@ public class LoginInterceptor implements HandlerInterceptor {
 
 
 
-        log.info("token:{}",request.getHeader("Csrf_check"));
-        log.info("token2:{}",request.getHeader("Csrf_Check"));
         String token=request.getHeader("csrf-check");
         String csrf=userSession.getCrsf();
-        log.info("token:{}",token);
-        log.info("csrf:{}",csrf);
+
         if(csrf.equals(token)){
 
 
@@ -88,7 +71,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         else{
 
-            //cookieRedisSession.delete_user_session_tot(userSessionTot);
+
 
             throw new CsrfError();
         }
@@ -128,27 +111,6 @@ public class LoginInterceptor implements HandlerInterceptor {
     }
 
 
-    private Optional<String> get_token_from_req(HttpServletRequest req){
-
-        Cookie[] cookies=req.getCookies();
-        if(cookies!=null){
-
-
-
-
-        Optional<Cookie> cookie= Arrays.stream(cookies).filter(x->"back_access_token".equals(x.getName()))
-                .findFirst();
-        if(cookie.isEmpty()){
-            return Optional.empty();
-        }
-
-
-        Optional<String> access_token=Optional.ofNullable(cookie.get().getValue());
-
-
-        return access_token;}
-        return Optional.empty();
-    }
 
 
 }

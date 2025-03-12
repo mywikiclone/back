@@ -5,6 +5,8 @@ import com.example.posttest.Exceptions.*;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtUtil;
+import com.example.posttest.etc.logininterceptors.CustomWebSocketDecorator;
+import com.example.posttest.etc.logininterceptors.WebSocketSecureInterCeptor;
 import com.example.posttest.service.EmailService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -13,19 +15,39 @@ import jakarta.persistence.ElementCollection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.WebSocketExtension;
+import org.springframework.web.socket.WebSocketMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.security.Principal;
+import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
 @RequiredArgsConstructor
 public class ExceptionController {
 
-    private final JwtUtil jwtUtil;
     private final EmailService emailService;
+
+    private final CustomWebSocketDecorator customWebSocketDecorator;
+
+
+
     @ExceptionHandler({CsrfError.class})
     public ResponseEntity<ApiResponse<String>> csrferrors(Exception ex){
         log.info("에러종류:{}",ex.getClass());
@@ -53,7 +75,7 @@ public class ExceptionController {
     }
 
 
-    @ExceptionHandler({EtcError.class,Exception.class})
+    @ExceptionHandler({EtcError.class/*Exception.class*/})
     public ResponseEntity<ApiResponse<String>> EtcError(Exception ex){
         log.info("에러종류:{}",ex.getClass());
         log.info("에러내용:{}",ex.getMessage());
@@ -84,6 +106,24 @@ public class ExceptionController {
         log.info("에러종류:{}",ex.getClass());
         return new ResponseEntity<>(ApiResponse.fail(ErrorMsgandCode.Fail_No_Power.getMsg()),HttpStatus.OK);
     }
+
+
+    /*@MessageExceptionHandler(WebSocketError.class)
+    @SendToUser("/queue/errors")
+    public String errormesg(Exception ex) throws IOException {
+
+
+
+        log.info("에러메시지 내용까보기:{}",ex.getMessage());
+
+        customWebSocketDecorator.closesession(ex.getMessage());
+
+        return "사용자 에러발생";
+    }*/
+
+
+
+
 
 
 

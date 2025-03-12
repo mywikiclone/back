@@ -27,8 +27,7 @@ public class Content extends Times {
 
     private String title;
 
-/*@Lob
-    private String content;*/
+
 
 
     @OneToOne(fetch =FetchType.LAZY)
@@ -36,9 +35,8 @@ public class Content extends Times {
     private LobContent lobContent;
 
 
-    @OneToOne(fetch =FetchType.LAZY)
-
-    private ContentAdmin grade;
+    @Enumerated(EnumType.STRING)
+    private UserAdmin grade;
 
 
     public Content(String title, LobContent content) {
@@ -54,7 +52,7 @@ public class Content extends Times {
     }
 
 
-    public Content( Member member, String title, LobContent content, ContentAdmin grade) {
+    public Content( Member member, String title, LobContent content, UserAdmin grade) {
         this.member = member;
         this.title = title;
         this.lobContent = content;

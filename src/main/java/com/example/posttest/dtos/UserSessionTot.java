@@ -14,11 +14,11 @@ public class UserSessionTot {
 
     private UserSession userSession;
 
-    private Cookie cookie;
 
-    public UserSessionTot(String session_id, UserSession userSession, Cookie cookie) {
+
+    public UserSessionTot(String session_id, UserSession userSession) {
         this.session_id = session_id;
         this.userSession = userSession;
-        this.cookie = cookie;
+
     }
 }

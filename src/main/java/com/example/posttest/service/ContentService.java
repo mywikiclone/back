@@ -1,50 +1,42 @@
 package com.example.posttest.service;
 
 import com.example.posttest.Exceptions.*;
+import com.example.posttest.Mapper.DiscussionMapper;
 import com.example.posttest.dtos.*;
 import com.example.posttest.entitiy.*;
 import com.example.posttest.etc.*;
-import com.example.posttest.repository.ContentAdminRepo;
 import com.example.posttest.repository.LobRepository;
 import com.example.posttest.repository.changelogrepo.ChangeLongRepo;
 import com.example.posttest.repository.contentrepositories.ContentRepository;
 import com.example.posttest.repository.memrepo.MemberRepository;
 import com.example.posttest.repository.realtimerepo.RealTimeRepo;
-import jakarta.persistence.Lob;
-import jakarta.servlet.http.Cookie;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.apache.tika.Tika;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.cglib.core.Local;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,8 +46,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ContentService {
 
-
-    private final ContentAdminRepo contentAdminRepo;
     private final ContentRepository contentRepository;
     private final ChangeLongRepo changeLongRepo;
     private final RealTimeRepo realTimeRepo;
@@ -63,6 +53,9 @@ public class ContentService {
     private final ResourceLoader resourceLoader;
     private final CookieRedisSession cookieRedisSession;
     private final LobRepository lobRepository;
+    private final RedisTemplate<String,String> redisTemplate;
+    private final DiscussionMapper discussionMapper;
+    private final ObjectMapper objectMapper;
     public ResponseEntity<ApiResponse<String>> uploadfile(MultipartFile file){
 
 
@@ -75,21 +68,12 @@ public class ContentService {
 
             }
 
-
-
             String filename = TxtFilter.file_name_filter(file.getOriginalFilename());
 
-//            log.info("syspath:{}",System.getProperty("user.dir"));
             String filepath="/home/ec2-user/back/uploads/" + filename;//ec2사용시 이렇게따로 분리해서만들어댜될듯?
-            //String filepath = System.getProperty("user.dir")+"/src/main/resources/uploads/" + filename;
-           // String filepath="/home/ec2-user/back"+"/src/main/resources/uploads/" + filename;
-
-           // /tmp/tomcat.8080.14093626743833726329/work/Tomcat/localhost/ROOT/back
 
 
             File destination = new File(filepath);
-            log.info("filepath:{}",filepath);
-            log.info("exist:{}",destination.exists());
 
             if(destination.exists()){
 
@@ -100,23 +84,17 @@ public class ContentService {
 
 
             long maxSize = 2 * 1024 * 1024;
-            log.info("파일크기:{}",file.getSize());
-            log.info("더크나ㅑ?:{}",file.getSize()>maxSize);
+
             if(file.getSize()>maxSize){
-                log.info("에러발생");
+
                 throw new EtcError();
             }
 
             String mimetype=tiKa.detect(inputStream);
-            log.info("mimetype:{}",mimetype);
-            log.info("equal:{}",mimetype.equals("image/png"));
+
             if(mimetype.equals("image/jpg")||mimetype.equals("image/png")||mimetype.equals("image/gif")) {
 
-                log.info("????");
-
                 file.transferTo(destination);
-                log.info("여기까지못오니설마?");
-
                 return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successfind.getMsg()));
             }
 
@@ -125,7 +103,7 @@ public class ContentService {
 
         }
         catch(Exception e){
-            log.info("e:{}",e.getMessage());
+
 
             throw new EtcError();
         }
@@ -148,11 +126,7 @@ public class ContentService {
             String file_search_name="";
             for(String end:end_name) {
                 file_search_name=String.format("/uploads/%s.%s", filename, end);
-               // file_search_name = String.format(System.getProperty("user.dir")+"/src/main/resources/uploads/%s.%s", filename, end);
-               // file_search_name=file_search_name.replaceAll("/","\\\\");
 
-               // Resource resource = resourceLoader.getResource("classpath:"+file_search_name);
-                //Resource resource = resourceLoader.getResource("/home/ec2-user/back"+"/src/main/resources"+file_search_name);
                 Resource resource=new FileSystemResource("/home/ec2-user/back"+file_search_name);
                 if (!resource.exists()) {
                     continue;
@@ -165,12 +139,11 @@ public class ContentService {
                 return new ResponseEntity<>(resource, headers, HttpStatus.OK);
 
             }
-      //  file_search_name=System.getProperty("user.dir")+"/src/main/resources/uploads/basic.jpg";
-       // file_search_name=file_search_name.replaceAll("/","\\\\");
+
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, String.format("image/%s","jpeg"));
         Resource resource = resourceLoader.getResource("classpath:"+"/uploads/basic.jpg");
-        log.info("결국 이렇게되느건가:?{}",resource.exists());
+
         return new ResponseEntity<>(resource,headers,HttpStatus.OK);
 
     }
@@ -178,7 +151,7 @@ public class ContentService {
 
 
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional
     public ResponseEntity<ApiResponse<ContentDto>> ContentSave(ContentDto contentDto, UserSessionTot userSessionTot){
             LocalDateTime now=LocalDateTime.now();
             long member_id=userSessionTot.getUserSession().getMember_id();
@@ -191,10 +164,9 @@ public class ContentService {
                 lobcontent=lobRepository.save(lobcontent);
 
 
-                ContentAdmin contentAdmin=new ContentAdmin(UserAdmin.User);
-                contentAdminRepo.save(contentAdmin);
 
-                Content content = new Content(member.get(), contentDto.getTitle(), lobcontent, contentAdmin);
+
+                Content content = new Content(member.get(), contentDto.getTitle(), lobcontent,UserAdmin.User);
 
                 content.setCreate_Time(now);
                 content.setUpdate_Time(now);
@@ -228,21 +200,32 @@ public class ContentService {
             Optional<Content> content_opt=contentRepository.findbyidwithforupdate(contentDto.getContent_id());
 
             LocalDateTime now=LocalDateTime.now();
+
             if(content_opt.isPresent()){
+
                 Optional<Member> member=memberRepository.findById(member_id);
 
 
                 if(gradecheck(content_opt.get(),member.get())){
 
                     LobContent lobContent=new LobContent(contentDto.getContent());
+
                     lobContent=lobRepository.save(lobContent);
+
                     content_opt.get().setLobContent(lobContent);
+
                     content_opt.get().setCreate_Time(now);
+
                     contentRepository.save(content_opt.get());
+
                     ChangeLog changeLog = new ChangeLog(content_opt.get(),lobContent, member.get());
+
                     changeLog.setCreate_Time(now);
+
                     changeLongRepo.save(changeLog);
+
                     HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"extend");
+
                     return new ResponseEntity(ApiResponse.success(now.toString(), ErrorMsgandCode.Successupdate.getMsg()),headers,HttpStatus.OK);
 
 
@@ -269,7 +252,7 @@ public class ContentService {
     *
     * 찾앗다는걸 기록하는 메서드.
     *
-    * */
+     */
 
     public void saveRealTime(Content content){
         RealTimeIssue realTimeIssue=new RealTimeIssue();
@@ -292,10 +275,10 @@ public class ContentService {
         if(content.isEmpty()){
 
             throw new CantFindError();
-            //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
         }
         saveRealTime(content.get());
-        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name());
+        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().name());
         return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));
     }
 
@@ -306,11 +289,11 @@ public class ContentService {
 
         if(content.isPresent()) {
             saveRealTime(content.get());
-            return ResponseEntity.ok(ApiResponse.success(new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name()), ErrorMsgandCode.Successfind.getMsg()));
+            return ResponseEntity.ok(ApiResponse.success(new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(),content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().name()), ErrorMsgandCode.Successfind.getMsg()));
         }
 
         throw new CantFindError();
-        //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
     }
 
     @Transactional
@@ -320,10 +303,10 @@ public class ContentService {
         if(content.isEmpty()){
 
             throw new CantFindError();
-            //return ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg());
+
         }
         saveRealTime(content.get());
-        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(), content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().getGrade().name());
+        ContentDto contentDto=new ContentDto(content.get().getContent_id(),content.get().getTitle(),content.get().getLobContent().getContent(), content.get().getMember().getEmail(),content.get().getUpdate_Time(),content.get().getGrade().name());
         return ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg());
     }
 
@@ -336,10 +319,10 @@ public class ContentService {
         Pageable page=PageRequest.of(page_num,12);
         Page<ChangeLogListDto> changeLogs=changeLongRepo.getchangelogs(page);
         if(changeLogs.isEmpty()){
-           // throw new CantFindError();
+
             List<ChangeLogListDto> list=new ArrayList<>();
             return ResponseEntity.ok(ApiResponse.success(list,"마지막 페이지"));
-            //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
         }
 
         if(changeLogs.isLast()){
@@ -358,15 +341,15 @@ public class ContentService {
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<ChangeLogDto>>> getchangelog(int page_num, Long id){
          Pageable page=PageRequest.of(page_num,12);
+
          Page<ChangeLogDto> changeLogs=changeLongRepo.getchangelogs(id,page);
-         log.info("최대 페이징갯수:{}",changeLogs.getTotalPages());
+
          if(changeLogs.isEmpty()){
 
             List<ChangeLogDto> list=new ArrayList<>();
 
              return ResponseEntity.ok(ApiResponse.success(list,"마지막 페이지"));
-            // throw new CantFindError();
-             //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
          }
 
         if(changeLogs.isLast()){
@@ -376,13 +359,6 @@ public class ContentService {
         }
 
 
-
-
-         /*List<ChangeLogDto> changeLogDtoList=changeLogs.stream()
-                 .map(x->{
-                   return  new ChangeLogDto(x.getLog_Id(),x.getCreate_Time());
-                 })
-                 .collect(Collectors.toList());*/
          return ResponseEntity.ok(ApiResponse.success(changeLogs.stream().toList(),ErrorMsgandCode.Successfind.getMsg()));
     }
 
@@ -396,24 +372,26 @@ public class ContentService {
 
 
         if(changeLog.isPresent()){
-        ChangeLog c=changeLog.get();
-        Content content=c.getContent();
-        ContentDto contentDto=new ContentDto(content.getContent_id(),c.getContent().getTitle(),c.getLobContent().getContent(),c.getMember().getEmail(),c.getUpdate_Time(),content.getGrade().getGrade().name());
+            ChangeLog c=changeLog.get();
+
+            Content content=c.getContent();
+            ContentDto contentDto=new ContentDto(content.getContent_id(),c.getContent().getTitle(),c.getLobContent().getContent(),c.getMember().getEmail(),c.getUpdate_Time(),content.getGrade().name());
 
 
 
-        return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));}
-        //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+            return ResponseEntity.ok(ApiResponse.success(contentDto,ErrorMsgandCode.Successfind.getMsg()));
+        }
+
 
 
         throw new CantFindError();
 
     }
-
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getRealtimeissue(){
 
         Pageable pageable=PageRequest.of(0,10);
+
         LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
 
 
@@ -423,7 +401,7 @@ public class ContentService {
         if(realTimeIssues.isEmpty()){
 
             throw new CantFindError();
-           // return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
 
         }
         List<RealTimeIssueDto> realTimeIssueDtoList=realTimeIssues.stream()
@@ -440,13 +418,58 @@ public class ContentService {
     }
 
 
+   /* @Transactional(readOnly = true)
+    @Scheduled(fixedRate = 100000)
+    public void testingfunc() throws InterruptedException {
+
+        Thread.sleep(5000);
+        log.info("1번쨰 스케쥴러 :{} {}",LocalDateTime.now(),Thread.currentThread().getName());
+        try {
+            List<ContentDto> list = discussionMapper.get_content_list();
+            log.info("list:{}", list);
+
+            redisSubPub.send_msg_to_msg_server(new MsgDto("realtime", "1", 0L, objectMapper.writeValueAsString(list)));
+        }
+        catch (Exception e){
+            log.info("error:{}",e.getStackTrace());
+        }
+
+    }*/
 
     @Transactional(readOnly = true)
-    public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getlastchagelogs(){
+    //@Scheduled(fixedRate = 29000)
+    public void testingfunc2() throws JsonProcessingException {
+        log.info("갱신");
         LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
 
-       List<Content> contentlist=changeLongRepo.getatleastchages(now);
-       log.info("{}",contentlist.size());
+
+        List<RealTimeIssueDto> contentlist2=discussionMapper.get_change_logs(now);
+
+        redisTemplate.opsForValue().set("30secdata",objectMapper.writeValueAsString(contentlist2));
+
+        //redisSubPub.send_msg_to_msg_server(new MsgDto("realtime", "1", 0L, objectMapper.writeValueAsString(contentlist2)));
+
+    }
+
+
+
+
+
+
+
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> getlastchagelogs()  {
+        try {
+            List<RealTimeIssueDto> contentlist2 = objectMapper.readValue(redisTemplate.opsForValue().get("30secdata"), new TypeReference<>() {
+            });
+
+            //  LocalDateTime now=LocalDateTime.now().minusMinutes(5l);
+
+
+            //List<RealTimeIssueDto> contentlist2=discussionMapper.get_change_logs(now);
+       /*List<Content> contentlist=changeLongRepo.getatleastchages(now);
+
 
        List<RealTimeIssueDto> contentlist2=contentlist.stream()
 
@@ -457,24 +480,30 @@ public class ContentService {
 
                    return new RealTimeIssueDto(x.getTitle(),x.getContent_id());
                })
-               .collect(Collectors.toList());
+               .collect(Collectors.toList());*/
 
 
-        return ResponseEntity.ok(ApiResponse.success(contentlist2,ErrorMsgandCode.Successfind.getMsg()));
+            return ResponseEntity.ok(ApiResponse.success(contentlist2, ErrorMsgandCode.Successfind.getMsg()));
+        }
+        catch(Exception e){
+            log.info("error:{}",e.getStackTrace());
+
+            throw new EtcError();
+        }
 
     }
+
+
+
+
 
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<List<RealTimeIssueDto>>> search_logic(String title){
             Pageable pageable=PageRequest.of(0,10);
             Page<Content> contents=contentRepository.search_logic(title,pageable);
             if(contents.isEmpty()){
-
-
-
-
                 throw new CantFindError();
-                //return ResponseEntity.ok(ApiResponse.fail(ErrorMsgandCode.Failfind.getMsg()));
+
             }
             List<RealTimeIssueDto> realTimeIssueDtoList=contents.stream()
                     .map(x->{
@@ -492,9 +521,9 @@ public class ContentService {
 
 
     public boolean  gradecheck(Content content,Member member){
-        UserAdmin content_grade=content.getGrade().getGrade();
+        UserAdmin content_grade=content.getGrade();
 
-        UserAdmin member_grade=member.getGrade().getGrade();
+        UserAdmin member_grade=member.getGrade();
 
 
 

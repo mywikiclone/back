@@ -31,6 +31,7 @@ public class RedisConfig {
     @Primary
     public RedisTemplate<String,Object> redisTemplate(){
         RedisTemplate<String,Object> redisTemplate=new RedisTemplate<>();
+
         redisTemplate.setValueSerializer(new StringRedisSerializer());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
 

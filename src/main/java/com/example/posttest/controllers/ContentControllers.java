@@ -2,11 +2,12 @@ package com.example.posttest.controllers;
 
 
 import com.example.posttest.Exceptions.CantFindError;
+import com.example.posttest.Mapper.DiscussionMapper;
 import com.example.posttest.dtos.*;
+import com.example.posttest.entitiy.DiscussionTopic;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.etc.JwtUtil;
-import com.example.posttest.etc.annotataion.CheckNewToken;
 import com.example.posttest.etc.annotataion.LoginUser;
 import com.example.posttest.service.ContentService;
 
@@ -15,7 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
-import org.springframework.data.repository.config.RepositoryNameSpaceHandler;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,22 +33,9 @@ public class ContentControllers {
 
     private final  ContentService contentService;
 
-
+    private final DiscussionMapper discussionMapper;
 
     private final JwtUtil jwtUtil;
-
-    @GetMapping("/nonloginuser")
-    public ResponseEntity<ApiResponse<IpDto>> getuserip(HttpServletRequest req){
-
-            String addr=req.getRemoteAddr();
-
-            log.info("사용자 ip:{}",addr);
-
-
-            return ResponseEntity.ok(ApiResponse.success(new IpDto(addr),ErrorMsgandCode.Successfind.getMsg()));
-
-    }
-
 
 
 
@@ -251,6 +237,17 @@ public class ContentControllers {
    }
 
 
+   @GetMapping("/getusercontent")
+   public ResponseEntity<ApiResponse<List<Long>>> get_user_content(){
+
+
+
+      List<Long> content_list=discussionMapper.getdiscussionid(1L);
+
+
+      return new ResponseEntity<>(ApiResponse.success(content_list,"success"),HttpStatus.OK);
+
+   }
 
    public long optionalnumscheck(Long num, String newtoken){
 

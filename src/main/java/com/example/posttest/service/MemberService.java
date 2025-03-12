@@ -3,15 +3,9 @@ package com.example.posttest.service;
 
 import com.example.posttest.Exceptions.*;
 import com.example.posttest.controllers.WebSocketController;
-import com.example.posttest.dtos.MemberDto;
-import com.example.posttest.dtos.UserSession;
-import com.example.posttest.dtos.UserSessionTot;
-import com.example.posttest.entitiy.Content;
+import com.example.posttest.dtos.*;
 import com.example.posttest.entitiy.Member;
-import com.example.posttest.entitiy.UserAdmins;
 import com.example.posttest.etc.*;
-import com.example.posttest.repository.UserAdminRepo;
-import com.example.posttest.repository.contentrepositories.ContentRepository;
 import com.example.posttest.repository.memrepo.MemberRepository;
 
 import jakarta.servlet.http.Cookie;
@@ -19,7 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -50,37 +43,34 @@ public class MemberService {
     private final RedisTemplate<String,String> redisTemplate;
 
 
-    private final UserAdminRepo userAdminRepo;
-
-
     private final WebSocketController webSocketController;
+
+
+    private final RedisSubPub redisSubPub;
 
 
     public ResponseEntity<ApiResponse<String>> memberassign(MemberDto memberDto,HttpServletRequest req){
 
-        log.info("IP:{}",req.getHeader("X-Forwarded-For"));
 
         try{
-
 
             String salt=BCrypt.gensalt(10);
             String password=BCrypt.hashpw(memberDto.getPassword(),salt);
             Member member=new Member();
-            UserAdmins userAdmins;
             if(memberDto.getEmail().equals("dong.3058@daum.net")) {
-                userAdmins=new UserAdmins(UserAdmin.Admin);
 
-                member = new Member(memberDto.getEmail(),password,userAdmins);
+
+                member = new Member(memberDto.getEmail(),password,UserAdmin.Admin);
 
             }
             else{
-                userAdmins=new UserAdmins(UserAdmin.User);
-                member=new Member(memberDto.getEmail(),password,userAdmins);
+
+                member=new Member(memberDto.getEmail(),password,UserAdmin.User);
 
             }
 
             member.setCreate_Time(LocalDateTime.now());
-            userAdminRepo.save(userAdmins);
+
             memberRepository.save(member);
         return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
         }
@@ -91,6 +81,63 @@ public class MemberService {
         }
 
     }
+
+
+
+
+
+    @Transactional
+    public String [] oauth2login(Oauth2Dto oauth2Dto){
+
+        String email=oauth2Dto.getEmail();
+
+        Optional<Member> member=memberRepository.findmember_beforeassign(email);
+
+
+        if(member.isEmpty()){
+
+            Member member_s=new Member();
+
+            if(email.equals("dong.3058@daum.net")) {
+
+
+                member_s = new Member(email,UserAdmin.Admin,"true");
+               member= Optional.of(memberRepository.save(member_s));
+                String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
+
+                return s;
+            }
+            else{
+
+                member_s=new Member(email,UserAdmin.User,"true");
+                member= Optional.of(memberRepository.save(member_s));
+                String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
+
+                return s;
+            }
+
+
+
+        }
+
+        else{
+            if(member.get().getOauth2_login().equals("true")){
+                //webSocketController.SendingAnotherEnvLoginMsg(email);
+
+                MsgDto msgDto=new MsgDto("logout","1",0L,"로그아웃 진행");
+                redisSubPub.send_msg_to_msg_server(msgDto);
+                String [] s=cookieRedisSession.makeyusersession(member.get().getMember_id());
+
+                return s;
+            }
+
+            throw new UnableToFindAccount();
+        }
+
+
+    }
+
+
 
     @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<String>> memberexistcheck(MemberDto memberDto){
@@ -105,13 +152,28 @@ public class MemberService {
         return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
     }
 
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<String>> memberexistcheck2(MemberDto memberDto){
+
+        Optional<Member> memberopt= memberRepository.findmember_beforeassign(memberDto.getEmail());
+        if(memberopt.isEmpty()||memberopt.get().getOauth2_login().equals("true")){
+            log.info("없거나 oatuh로그인임");
+            throw new ExistIdError();
+
+        }
+
+
+        return ResponseEntity.ok(ApiResponse.success("성공",ErrorMsgandCode.Successlogin.getMsg()));
+    }
 
 
 
 
 
 
-    public ResponseEntity<ApiResponse<MemberDto>> logincheck(HttpServletRequest req/*,String newtoken*/){
+
+
+    public ResponseEntity<ApiResponse<MemberDto>> logincheck(HttpServletRequest req){
 
 
         UserSessionTot userSessionTot=cookieRedisSession.getusersessiontot(req);
@@ -122,7 +184,7 @@ public class MemberService {
 
 
 
-        webSocketController.SendingAnotherEnvLoginMsg("dong.3058@daum.net");
+
 
         Long member_id=(Long) userSession.getMember_id();
 
@@ -144,18 +206,44 @@ public class MemberService {
 
 
     @Transactional
+    public ResponseEntity<ApiResponse<String>> changepassword(UserSessionTot userSessionTot,MemberDto memberDto){
+
+        Optional<Member> member = memberRepository.findById(userSessionTot.getUserSession().getMember_id());
+        if(member.get().getOauth2_login().equals("true")){
+
+            log.info("oauth2로그인 걸림");
+            throw new UnableToFindAccount();
+
+        }
+
+
+        String salt = BCrypt.gensalt();
+        String password = BCrypt.hashpw(memberDto.getPassword(), salt);
+        int nums = memberRepository.changepassword(member.get().getEmail(), password);
+
+        return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successfind.getMsg()));
+
+    }
+
+
+
+    @Transactional
     public ResponseEntity<ApiResponse<String>> changepassword(MemberDto memberDto){
 
+        Optional<Member> member = memberRepository.findmember_beforeassign(memberDto.getEmail());
+        if(member.get().getOauth2_login().equals("true")){
 
-            String salt = BCrypt.gensalt();
-            String password = BCrypt.hashpw(memberDto.getPassword(), salt);
-            int nums = memberRepository.changepassword(memberDto.getEmail(), password);
+            log.info("oauth2로그인 걸림");
+            throw new UnableToFindAccount();
 
-            return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successfind.getMsg()));
+        }
 
 
-        //return ResponseEntity.ok(ApiResponse.success("업뎃실패",ErrorMsgandCode.Fail_Csrf_Auth.getMsg()));
+        String salt = BCrypt.gensalt();
+        String password = BCrypt.hashpw(memberDto.getPassword(), salt);
+        int nums = memberRepository.changepassword(member.get().getEmail(), password);
 
+        return ResponseEntity.ok(ApiResponse.success("성공", ErrorMsgandCode.Successfind.getMsg()));
 
     }
 
@@ -168,6 +256,12 @@ public class MemberService {
 
         HashOperations<String,String,String> opsforhash=redisTemplate.opsForHash();
         String nums=(String) opsforhash.get("try_login",memberDto.getEmail());
+
+
+        if(member.get().getOauth2_login().equals("true")){
+            log.info("oauth2로그인 걸림");
+            throw new UnableToFindAccount();
+        }
 
         if(member.isEmpty()) {
 
@@ -272,6 +366,11 @@ public class MemberService {
         UserSessionTot userSessionTot=cookieRedisSession.getusersessiontot(req);
 
         HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"delete");
+        log.info("logout");
+
+
+        redisSubPub.send_msg_to_msg_server(new MsgDto("delsse", "1", userSessionTot.getUserSession().getMember_id(), "test"));
+
 
         return new ResponseEntity<>(ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg()),headers,HttpStatus.OK);
 
@@ -279,29 +378,26 @@ public class MemberService {
 
     }
 
+    public void logouttesting(HttpServletRequest req){
+
+        //UserSessionTot userSessionTot=cookieRedisSession.getusersessiontot(req);
+
+        //HttpHeaders headers=cookieRedisSession.makecookieinheader(userSessionTot,"delete");
+        //log.info("logout");
 
 
-    private Optional<String> get_token_from_req(HttpServletRequest req){
-
-        Cookie[] cookies=req.getCookies();
-        if(cookies!=null){
+        redisSubPub.send_msg_to_msg_server(new MsgDto("delsse", "1", 0L, "test"));
 
 
+        //return new ResponseEntity<>(ApiResponse.success("success",ErrorMsgandCode.Successlogin.getMsg()),headers,HttpStatus.OK);
 
 
-            Optional<Cookie> cookie= Arrays.stream(cookies).filter(x->"back_access_token".equals(x.getName()))
-                    .findFirst();
-            if(cookie.isEmpty()){
-                return Optional.empty();
-            }
 
-
-            Optional<String> access_token=Optional.ofNullable(cookie.get().getValue());
-
-
-            return access_token;}
-        return Optional.empty();
     }
+
+
+
+
 
 
 }

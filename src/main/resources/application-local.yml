@@ -1,6 +1,5 @@
 spring:
 
-
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
@@ -28,7 +27,7 @@ spring:
     expiration: 1800000
 
   # Email
-  #xjsy qqsm dwnm idix
+  #
   mail:
     host: smtp.gmail.com
     port: 587
@@ -66,11 +65,22 @@ spring:
         domain: localhost
         same-site: none
 
+mybatis:
+  type-aliases-package: com.example.posttest.dtos, com.example.posttest.entitiy
+  #type-aliases-package는 여러개가 등록이된다.
+  configuration:
+    map-underscore-to-camel-case: false
 
-logging:
-  level:
-    org:
-      springframework:
-        transaction:
-          interceptor: trace
+#logging:
+ # level:
+  #  org:
+   #   springframework:
+    #    transaction:
+     #     interceptor: trace
 
+#logging:
+ # level:
+  #  org.springframework.messaging: DEBUG
+   # org.springframework.web.socket: DEBUG
+    #org.springframework.web.socket.client: DEBUG
+    #org.springframework.web.socket.messaging: DEBUG

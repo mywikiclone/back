@@ -4,5 +4,5 @@ public interface LoginSessionConst {
 
 
     String session_const="member_login";
-
+    static void hellol(){};
 }

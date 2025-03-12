@@ -1,11 +1,8 @@
 package com.example.posttest.Config;
 
 import com.example.posttest.etc.CookieRedisSession;
-import com.example.posttest.etc.JwtUtil;
 import com.example.posttest.etc.annotataion.LoginAnnotationResolver;
-import com.example.posttest.etc.annotataion.NewTokenResolver;
 
-import com.example.posttest.etc.logininterceptors.ExcessAccessInterCeptor;
 import com.example.posttest.etc.logininterceptors.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
 
@@ -34,11 +31,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/update", "/save", "/admin/**", "/topicsave", "/savecomment", "/changepassword");
 
 
-        /*registry.addInterceptor(new ExcessAccessInterCeptor(redisTemplate))
-                .order(1)
-                .addPathPatterns("/firlogin");*/
-
-
     }
 
 
@@ -50,7 +42,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(new LoginAnnotationResolver(cookieRedisSession));
-        resolvers.add(new NewTokenResolver());
+
     }
 
     @Override
@@ -63,6 +55,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .exposedHeaders("Csrf_check")//z클라이언트가 응답을볼떄 볼수잇는 헤더지정
                 .allowCredentials(true);
     }
+
+
 
 
 

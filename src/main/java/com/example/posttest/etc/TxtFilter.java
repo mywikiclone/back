@@ -26,7 +26,7 @@ public class TxtFilter {
 
 
         }
-        log.info("여기까지오는가?");
+
         return false;
 
     }

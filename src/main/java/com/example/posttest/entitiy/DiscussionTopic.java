@@ -19,13 +19,10 @@ public class DiscussionTopic extends Times{
 
 
 
-    @Column(name="origin_proposer_id")
-    private long origin_proposer_id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="proposer_id")
+    private Member member;
 
-
-    private String writer_email;
-
-    //private String subject_title;
 
     private String topic_title;
 
@@ -41,9 +38,8 @@ public class DiscussionTopic extends Times{
 
     private String introduction_text;
 
-    public DiscussionTopic(long origin_proposer_id,String writer_email, String topic_title,Content content,LocalDateTime deadline,String introduction_text) {
-        this.origin_proposer_id = origin_proposer_id;
-        this.writer_email=writer_email;
+    public DiscussionTopic(Member member,String topic_title,Content content,LocalDateTime deadline,String introduction_text) {
+        this.member=member;
         this.topic_title = topic_title;
         this.content=content;
         this.deadline=deadline;

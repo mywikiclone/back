@@ -2,8 +2,6 @@ package com.example.posttest.repository.contentrepositories;
 
 
 import com.example.posttest.entitiy.Content;
-import com.example.posttest.entitiy.ContentAdmin;
-import com.example.posttest.entitiy.Member;
 import com.example.posttest.etc.UserAdmin;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -12,12 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 public interface ContentRepository extends JpaRepository<Content,Long>{
@@ -62,6 +56,6 @@ public interface ContentRepository extends JpaRepository<Content,Long>{
 
  @Modifying(clearAutomatically=true)
  @Query("UPDATE Content c SET c.grade = :grade WHERE c.id = :id")
- int changeadmin(@Param("grade") ContentAdmin grade, @Param("id") Long id);
+ int changeadmin(@Param("grade") UserAdmin grade, @Param("id") Long id);
 
 }

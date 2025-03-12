@@ -6,6 +6,7 @@ import com.example.posttest.Exceptions.EtcError;
 import com.example.posttest.dtos.MailAuthDto;
 import com.example.posttest.dtos.MailAuthDto2;
 import com.example.posttest.dtos.MemberDto;
+import com.example.posttest.dtos.UserSessionTot;
 import com.example.posttest.etc.ApiResponse;
 import com.example.posttest.etc.ErrorMsgandCode;
 import com.example.posttest.repository.memrepo.MemberRepository;
@@ -61,7 +62,7 @@ public class EmailService {
     public ResponseEntity<ApiResponse<String>> create_password(String email){
         log.info("mail service:{} {}",senderEmail,time);
         int number=(int)(Math.random()*(999))+100;
-
+        ResponseEntity<ApiResponse<String>> as= memberService.memberexistcheck2(new MemberDto(email,""));
         MimeMessage mimeMessage=javaMailSender.createMimeMessage();
         try {
 
@@ -75,11 +76,6 @@ public class EmailService {
             
            ResponseEntity<ApiResponse<String>> resp=memberService.changepassword(new MemberDto(email,String.valueOf(number)));
 
-           if(resp.getBody().getMsg().equals("업뎃실패")){
-               throw new Exception();
-           }
-            
-            
             return ok(ApiResponse.success("메일전송성공", ErrorMsgandCode.Successlogin.getMsg()));
         }
         catch(Exception e){
@@ -98,7 +94,7 @@ public class EmailService {
         log.info("mail service:{} {}",senderEmail,time);
         int number=(int)(Math.random()*(999))+100;
         ValueOperations<String,String> valueOperations =redisTemplate.opsForValue();
-
+        //ResponseEntity<ApiResponse<String>> as=memberService.memberexistcheck2(new MemberDto(email,""));
         MimeMessage mimeMessage=javaMailSender.createMimeMessage();
         try {
 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
+        "http://mybatis.org/schema/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.posttest.Mapper.DiscussionMapper">
+
+
+    <select id="getdiscussionid">
+
+        select content_id from content where content.member_id=#{member_id}
+
+
+    </select>
+
+
+    <select id="get_content_list" resultType="ContentDto">
+
+        select content_id,title from content order by content.create_time limit 5;
+
+    </select>
+
+
+    <select id="get_change_logs" resultType="RealTimeIssueDto">
+
+
+        select distinct content.content_id,title from content inner join change_log as c on c.content_id=content.content_id
+
+        where c.create_time>#{now}
+
+        limit 10;
+    </select>
+
+    <select id="get_feed_list" resultType='Long'>
+
+
+        select distinct member_id from discussion_comment where topic_id=#{id};
+
+    </select>
+
+
+
+
+
+</mapper>

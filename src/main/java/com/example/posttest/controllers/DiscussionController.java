@@ -4,31 +4,20 @@ import com.example.posttest.dtos.DiscussionCommentDtos;
 import com.example.posttest.dtos.DiscussionTopicDto;
 import com.example.posttest.dtos.TopicDto;
 import com.example.posttest.dtos.UserSessionTot;
-import com.example.posttest.entitiy.DiscussionComment;
-import com.example.posttest.entitiy.DiscussionTopic;
 import com.example.posttest.etc.ApiResponse;
-import com.example.posttest.etc.ErrorMsgandCode;
-import com.example.posttest.etc.JwtToken;
 import com.example.posttest.etc.JwtUtil;
-import com.example.posttest.etc.annotataion.CheckNewToken;
 import com.example.posttest.etc.annotataion.LoginUser;
 import com.example.posttest.service.DiscussionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
